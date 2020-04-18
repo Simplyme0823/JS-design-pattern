@@ -1,0 +1,229 @@
+<body>
+    <script>
+        //创建img
+        var myImage = (function () {
+            var imgNode = document.createElement('img')
+            document.body.appendChild(imgNode)
+            return {
+                setSrc: function (src) {
+                    imgNode.src = src
+                }
+            }
+        })()
+
+        //代理类
+        var proxy = (function () {
+            var img = new Image
+            img.onload = function () {//img.src = src 资源加载完毕后 会把图片资源“传递”给myImg
+                myImage.setSrc(this.src)//this指向new的img
+            }
+            return {
+                setSrc: function (src) {
+                    myImage.setSrc('http://pic2.sc.chinaz.com/files/pic/pic9/202003/zzpic23992.jpg')//先用快的图片
+                    img.src = src//这里设置后 img已经再加载资源了 
+                }
+            }
+        })()
+
+        proxy.setSrc("http://pic1.sc.chinaz.com/files/pic/pic9/202003/zzpic23991.jpg")
+
+        //透明代理,因为setSrc 函数名称一样
+        //即代理和本体接口的一致性
+        //1.用户可以放心地请求代理，值关心能否得到想要的结果
+        //2.在任何使用本体的地方都可以替换成使用代理
+
+        //面向对象设计的原则---单一职责原则
+        //一个类(包括对象与函数)，应该仅有一个引起它变化的原因
+
+        var synchronousFile = function (id) {
+            console.log(id)
+        }
+
+        var proxySynchronousFile = (function () {
+            var cache = []
+            timer
+            return function (id) {
+                cache.push(id)
+                if (timer) {
+                    return
+                }
+                timer = setTimeout(function () {
+                    synchronousFile(cache.join(','))
+                    clearTimeout(timer)
+                    timer = null
+                    cache.length = 0
+                }, 2000)
+            }
+        })()
+        //类似节流
+        var checkbox = document.getElementsByName('input')
+        for (var i = 0; c; c = checkbox[i++]) {
+            c.onclick = function () {
+                if (this.checked == true) {
+                    proxySynchronousFile(this.id)
+                }
+            }
+        }
+
+
+        //mini控制台的缓存，等到F12的时候才出发代码
+        //未加载miniConsole.js的时候
+        var cache = []
+        var miniConsole = {
+            log: function () {
+                var args = arguments
+                cache.push(function () {
+                    //本体                //代理        
+                    return miniConsole.log.apply(miniConsole, args)
+                })
+            }
+        }
+        miniConsole.log(1)
+
+        //按F2的时候真正加载miniConsole.js,并且调用缓存中的fn
+        var handler = function (ev) {
+            if (ev.code === 113) {
+                var script = document.create('script')
+                script.onload = function () {
+                    //此时加载完毕,miniConsole对象已经变了
+                    for (var i = 0, fn; fn = cache[i++];) {
+                        fn()
+                    }
+                }
+                script.src = 'miniConsole.js'
+                document.getElementsByName('head')[0].appendChild(script)
+            }
+        }
+        document.body.addEventListener('keydown', handler, false)
+        //真正加载miniConsole的时候
+        //注意这里没有声明新的变量
+        miniConsole = {
+            log: function () {
+                console.log(Array.prototype.join.call(arguments))
+            }
+        }
+
+        //--------------------------------------------整理代码
+        var miniConsole = (function () {
+            var cache = []
+            var handler = function (ev) {
+                if (ev.keyCode === 113) {
+                    var script = document.create('script')
+                    script.onload = function () {
+                        //此时加载完毕,miniConsole对象已经变了
+                        for (var i = 0, fn; fn = cache[i++];) {
+                            fn()
+                        }
+                    }
+                    script.src = 'miniConsole.js'
+                    document.getElementsByName('head')[0].appendChild(script)
+                }
+            }
+            document.body.addEventListener('keydown', handler, false)
+            return {
+                log: function () {
+                    var args = arguments
+                    cache.push(function () {
+                        return miniConsole.log.apply(miniConsole, arguments)
+                    })
+                }
+            }
+        })()
+
+        miniConsole.log(1)
+
+        //真正的miniConsole代码
+        miniConsole = {
+            log: function () {
+                console.log(Array.prototype.join.call(arguments))
+            }
+        }
+
+        //缓存代理--计算乘积
+        //mult专注计算
+        var mult = function () {
+            var a = 1
+            for (var i = 0; i < arguments.length; i++) {
+                a = a * arguments[i]
+            }
+            return a
+        }
+        //proxyMult专注缓存
+        var proxyMult = (function () {
+            var cache = {}
+            return function () {
+                var args = Array.prototype.join.call(arguments, ',')
+                if (args in cache) {
+                    return cache[args]
+                }
+                return cache[args] = mult.apply(this, arguments)
+            }
+        })()
+
+        proxyMult(1, 2, 3, 4)
+
+
+        //分页缓存
+        function ajax(url,cb) {
+            axios({ url: url }, cb)
+        }
+
+        var cb = (function cacheTableData() {
+            var cache = {}
+            function cb(data) {
+                cache[data.page] = data.data
+            }
+            return function (url, page) {
+                if (page in cache) {
+                    return cache[page]
+                } else {
+                    ajax.call(this, url, cb)
+                    return cache[page]
+                }
+            }
+        }())
+
+        cb("test?page=1", 1)
+
+
+
+
+
+
+
+        //---------------------------利用高阶函数来动态创建代理
+
+        var mult = function () {
+            var a = 1
+            for (var i = 0; i < arguments.length; i++) {
+                a = a * arguments[i]
+            }
+            return a
+        }
+
+        var plus = function () {
+            var a = 1
+            for (var i = 0; i < arguments.length; i++) {
+                a = a + arguments[i]
+            }
+            return a
+        }
+
+        var createProxyFactory=function(fn){
+            var cache ={}
+            return function(){
+                var args = Array.prototype.join.call(arguments,',')
+                if(args  in cache){
+                    return cache[args]
+                }else{
+                    return cache[args] = fn.apply(this, arguments)
+                }
+            }
+        }
+
+        var proxyMult = createProxyFactory(mult)
+        var proxyPlus = createProxyFactory(plus)
+        proxyMult(1,2,3,4)
+        proxyPlus(1,2,3,4)
+    </script>
+</body>

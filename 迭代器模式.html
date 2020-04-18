@@ -1,0 +1,40 @@
+<body>
+    <script>
+        //jquery的each函数
+        var each = function (arr, cb) {
+            for (let i = 0; i < arr.length; i++) {
+                //强制绑定了对象
+                cb.call(arr[i], i, arr[i])
+            }
+        }
+        each([1, 2, 3], function (i, n) {
+            alert([i, n])
+        })
+        //以上为内部迭代器，即内部已经定义了迭代规则，外部只要启动一次，即调用each函数
+
+        //外部迭代器
+        var Itera = function(obj){
+            var current = 0
+            var next = function(){
+                return current+=1
+            }
+
+            var isDone = function(){
+                return current >=obj.length
+            }
+
+            var getCurrentItem = function(){
+                return obj[current]
+            }
+
+            return{
+                next,
+                isDone,
+                getCurrentItem,
+                length:obj.length
+            }
+        }
+
+        //对于obj对象 可以用for in来进行迭代行为
+    </script>
+</body>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+</head>
+
+<body>
+    <button id='login'> Login</button>
+    <script>
+        //抽离公共部分
+        var getSingle = function (fn) {
+            var result
+            var args = [].slice.call(arguments).slice(1)
+            return function () {
+                return result || (result = fn.apply(this, args.concat(arguments)))
+            }
+        }
+
+        function test() {
+            console.log(arguments.slice(1))//报错
+        }
+        //test(1,2,3)
+
+
+        var createLoginLayer = function () {
+            var div = document.createElement('div')
+            div.innerHTML = '我是悬浮窗'
+            div.style.display = 'none'
+            document.body.appendChild(div)
+            return div
+        }
+
+        var createSingleDiv = getSingle(createLoginLayer)
+
+        document.getElementById('login').onclick = function () {
+            var div = createSingleDiv()
+            div.style.display = 'block'
+        }
+
+
+        //在其他地方的应用
+        //1.ajax动态添加数据，每次都会渲染列表，渲染列表的时候回重现绑定函数
+        var bindEvent = getSingle(function () {
+            document.getElementById('ajax').addEventListener = function () {
+                alert('click')
+            }
+            return true
+        })
+
+        var render = function () {
+            console.log('开始渲染')
+            bindEvent()
+        }
+
+        render()//绑定只执行一次
+        render()
+        render()
+    </script>
+</body>
+
+</html>

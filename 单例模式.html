@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+</head>
+
+<body>
+    <script>
+        //构造函数做了两件事
+        // 1.立即执行函数创建闭包，再重写createDiv方法
+        // 2.构造函数创造div 然后返回实例（保证只有一个对象）
+        var createDiv = (function () {
+            var instance
+            var createDiv = function (html) {
+                if (instance) {
+                    return instance
+                }
+                this.html = html
+                this.init()
+                return instance = this //this为创造的类实例
+            }
+            createDiv.prototype.init = function () {
+                var div = document.createElement('div')
+                div.innerHTML = this.html
+                document.body.appendChild(div)
+            }
+
+            return createDiv
+        })()
+
+        var a = new createDiv('seven')
+        var b = new createDiv('eight')//只会创造一个div
+        console.log(a === b)
+
+        //代理模式实现
+        //CreateDiv值复制创建div
+        var CreateDiv = function (html) {
+            this.html = html
+            this.init()
+        }
+        CreateDiv.prototype.init = function () {
+            var div = document.createElement('div')
+            div.innerHTML = this.html
+            document.body.appendChild(div)
+        }
+
+        var ProxySingletonCreateDiv = (function () {
+            var instance = null
+            return function (html) {
+                if (!instance) {
+                    instance = new CreateDiv(html)
+                }
+                return instance
+            }
+        })()
+
+        var a = new ProxySingletonCreateDiv('SEVEN')
+        var b = new ProxySingletonCreateDiv('EIGHT')
+        console.log(a === b)
+
+
+        //以上是传统的面向对象的创建单例模式
+        //但是在js中没有类的概念
+        //单例的核心 1. 只有一个实例； 2.可供全局访问
+
+        //使用命名空间
+        var namespace1 = {
+            a: function () {
+                alert(1)
+            },
+            b: function () {
+                alert(2)
+            }
+        }
+        //动态创建命名空间
+        var myApp ={}
+        myApp.namespace = function(name){
+            var parts = name.split('.')
+            var current = myApp
+            for(let i in parts){
+                if(!current[parts[i]]){
+                    current[parts[i]] = {}
+                }
+                current = current[parts[i]]//?
+            }
+        }
+        myApp.namespace('dom.style')
+        console.dir(myApp)
+
+        //利用闭包创建私有变量
+        var user = (function(){
+            var _name ='seven'
+            var _age = 29
+            return{
+                getUesrInfo:function(){
+                    return _name + '-' + _age
+                }
+            }
+        })
+    </script>
+</body>
+
+</html>
