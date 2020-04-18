@@ -1,2 +1,2 @@
 # JS-design-pattern
-《》JS设计模式》学习
+《JS设计模式》学习
