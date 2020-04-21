@@ -31,17 +31,18 @@
                 })
             }
         }
-        const handle = function () { console.log(this) }
-        event.on('msg', handle)
-        event.emit('msg')
+        /* const handle = function () { console.log(this) }
+         event.on('msg', handle)
+         event.emit('msg')*/
 
         //书上的增加了离线缓存及命名空间
-
+        //首先是一个IFEE
         var myEvent = (function () {
             var global = this,  //window
                 myEvent,
                 _default = 'default'
-            //立即运行函数
+
+            //此处的myEvent也是匿名函数表达式运行结果，即return的一个对象
             myEvent = function () {
                 var _listen,
                     _create,
@@ -51,7 +52,7 @@
                     _shift = Array.prototype.shift,
                     _unshift = Array.prototype.unshift,
                     namespaceCache = {}
-                    find,
+                find,
 
                     _listen = function (key, fn, cache) {
                         if (!cache[key]) {
@@ -63,7 +64,7 @@
                 _remove = function (key, cache, fn) {
                     if (cache[key]) {
                         if (fn) {
-                            //倒叙
+                            //倒叙方便splice
                             for (var i = cache[key].length; i >= 0; i--) {
                                 if (cache[key][i] === fn) {
                                     cache[key].splice(i, 1)
@@ -76,11 +77,13 @@
                 }
 
                 _trigger = function () {
+                    //这里去除了cache和key,这么做是为了调用监听函数的时候传参
                     var cache = _shift.call(arguments)
-                    key = _shift.call(arguments)
-                    args = arguments
-                    _self = this
-                    ret
+                    var key = _shift.call(arguments)
+
+                    var args = arguments
+                    var _self = this    //this被apply强行改变成对应的namespace
+                    var ret
                     //时间对应的缓存数组
                     stack = cache[key]
                     if (!stack || !stack.length) {
@@ -88,15 +91,26 @@
                     }
                     //遍历
                     return each(stack, function () {
+                        console.log(_self)//{listen: ƒ, one: ƒ, remove: ƒ, trigger: ƒ}
+                        console.log(this) //this被call绑定成了stack[i],因此this成了stack[i]
+                        console.log(args)
+                        console.log(arguments) // 0, ƒ 是stack的index和stack[i]
                         return this.apply(_self, args)
                     })
                 }
+
                 each = function (ary, fn) {
                     var ret;
                     for (var i = 0, l = ary.length; i < l; i++) {
                         var n = ary[i]
+                        //n为每一个函数
+                        console.log(fn)//fn为上方each内传入的回调函数
+                        console.log(n)
+                        //这里为什么要call的时候传入i, n ????????!!!!!!!!!!
+                        //这里call的时候把fn的context即this改为n,这样导致回调函数的this为n
                         ret = fn.call(n, i, n)
                     }
+                    //考虑fn()有返回值的情况
                     return ret
                 }
 
@@ -104,19 +118,20 @@
                 _create = function (namespace) {
                     var namespace = namespace || _default;
                     //每个cache都有以事件名为key, 由handler们组成的数组为value的对象
-                    var cache = {}
-                    var offlineStack = [] //先trigger后listen的事件
+                    var cache = {} //cache存在闭包内部
+                    var offlineStack = [] //存储离线事件，可以先发布后订阅，每个命名空间一个离线事件
 
-                    //每一个namespace都有一个ret对象
+                    //每一个namespace都有一个ret对象,如果没有namespaceCache对象没有namespace对应的值，就返回一个ret对象作为其值
                     var ret = {
-                        //last是只关注离线函数作用栈内的最后一个函数
+                        //last是只关注离线函数栈内的最后一个函数
                         listen: function (key, fn, last) {
                             _listen(key, fn, cache)
                             if (offlineStack === null) {
                                 return
                             }
                             if (last === 'last') {
-                                offlineStack.length && offlineStack.pop()() 
+                                //调用离线事件的最后一个函数
+                                offlineStack.length && offlineStack.pop()()
                             } else {
                                 //调用cache内的handlers
                                 each(offlineStack, function () {
@@ -125,6 +140,7 @@
                                     this()
                                 })
                             }
+                            //这里是为了保证离线事件只运行一次
                             offlineStack = null
                         },
 
@@ -141,17 +157,27 @@
                             var fn,
                                 args,
                                 _self = this
-                            _unshift.call(arguments, cache)
+
+                            //arguments第一个参数有了cache,第二个参数是key
+                            _unshift.call(arguments, cache)//cache存在_created的闭包中
+
                             args = arguments
-                            fn = function () {
+
+                            fn = function () {//只是个表达式，并没有运行
+
+                                //_trigger的context为namespace
                                 return _trigger.apply(_self, args)
                             }
+
+                            //先trigger后listen的时候先保存_trigger
                             if (offlineStack) {
                                 return offlineStack.push(fn)
                             }
+                            //运行_trigger
                             return fn()
                         }
                     }
+                    //不清楚外面的三目表达式的作用
                     return namespace ?
                         (namespaceCache[namespace]
                             ? namespaceCache[namespace]
@@ -159,11 +185,14 @@
                         : ret
                 }
 
+
                 //这部分是真正的myEvent
-                //每次都调用create是为了创造命名空间，防止事件过多，互相干扰
                 return {
+                    namespace: namespaceCache,
+                    //每次都调用create是为了创造命名空间，防止事件过多，互相干扰
                     create: _create,
-                    on: function (key, fn, last) {
+                    one: function (key, fn, last) {
+                        //这里是为了方便使用【默认】的命名空间
                         var event = this.create()
                         event.one(key, fn, last)
                     },
@@ -173,6 +202,7 @@
                     },
                     listen: function (key, fn, last) {
                         var event = this.create()
+                        console.log(event)
                         event.listen(key, fn, last)
                     },
                     trigger: function () {
@@ -181,17 +211,29 @@
                     },
                 }
             }()
-
             return myEvent
         })()
 
+
+
+        //直接调用myEvent.listen()/one()/remove()/trigger的时候是调用命名空间
         console.log(myEvent)
 
+        //调用myEvent.create()的时候 创建/获取命名空间
+        const test = myEvent.create('namespaceCreate')
+        const testHandle = () => {
+            console.log('testNamespace')
+        }
+        //这里的test调用的是命名空间对象
+        test.listen('msg', testHandle)
+        test.trigger('msg')
 
-        const a =function(){ return 'test'}
-        console.log(a)//function(){ return 'test'}
 
-        const a =function(){ return 'test'}()
-        console.log(a)//test
+        //第二个myEvent
+      //  const a = function () { return 'test' }
+      //  console.log(a)//function(){ return 'test'}
+
+      //  const b = function () { return 'test' }()
+      //  console.log(b)//test
     </script>
 </body>
