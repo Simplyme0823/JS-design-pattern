@@ -123,7 +123,7 @@
 
                     //每一个namespace都有一个ret对象,如果没有namespaceCache对象没有namespace对应的值，就返回一个ret对象作为其值
                     var ret = {
-                        //last是只关注离线函数栈内的最后一个函数
+                        //last是只关注离线函数栈内的最后一个函数,比如说消息队列，我们只要执行一次消息就行了
                         listen: function (key, fn, last) {
                             _listen(key, fn, cache)
                             if (offlineStack === null) {

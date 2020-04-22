@@ -1,0 +1,217 @@
+<body>
+
+    <button id="button1">点击按钮1</button>
+    <button id="button2">点击按钮2</button>
+    <button id="button3">点击按钮3</button>
+
+
+    <div id="ball" style="position: absolute;background: #000;width: 50px;height: 50px;"></div>
+    输入小球移动的位置：<input id="pos" />
+    <button id="moveBtn">开始移动</button>
+    <button id="cancelBtn">cancel</button>
+    <script>
+        /**
+         * 任务情景：两拨开发人员并行开发，一部分开发界面按钮，一部分负责按钮功能
+         * 目标：利用命令模式解耦
+         * 特点：开发按钮的人员不需要关注按钮的具体功能，只要留一个接口就可以
+         * 
+         * 
+         * 
+         */
+        //以下为编写界面按钮的代码
+        var btn1 = document.getElementById('button1')
+        var btn2 = document.getElementById('button2')
+        var btn3 = document.getElementById('button3')
+/*
+        var setCommand = function (button, command) {
+            button.onclick = function () {
+                command.execute()
+            }
+        }
+
+        //以下为编写具体功能的代码
+        var menuBar = {
+            refresh() {
+                console.log('刷新菜单目录')
+            }
+        }
+
+        var subMenu = {
+            add() {
+                console.log('添加子菜单')
+            },
+            del() {
+                console.log('删除子菜单')
+            }
+        }
+
+        //这里创建了三个类
+        var RefreshMenuBarCommand = function (receiver) {
+            this.receiver = receiver
+        }
+
+        RefreshMenuBarCommand.prototype.execute = function () {
+            this.receiver.refresh()
+        }
+
+        var AddSubMenuCommand = function (receiver) {
+            this.receiver = receiver
+        }
+
+        AddSubMenuCommand.prototype.execute = function () {
+            this.receiver.add()
+        }
+
+        var DelSubMenuCommand = function (receiver) {
+            this.receiver = receiver
+        }
+
+        DelSubMenuCommand.prototype.execute = function () {
+            this.receiver.del()
+        }
+
+        var refreshMenuBarCommand = new RefreshMenuBarCommand(menuBar)
+        var addSubMenuCommand = new AddSubMenuCommand(subMenu)
+        var delSubMenuCommand = new delSubMenuCommand(subMenu)
+        //这样就完成解耦，，，但是感觉好麻烦
+        setCommand(btn1, refreshMenuBarCommand)
+        setCommand(btn2, addSubMenuCommand)
+        setCommand(btn3, delreshMenuBarCommand)
+
+
+        //以下是js中的实现，因为js中函数是一等公民，可以当做参数传入
+        //命令模式的由来，其实是cb函数的一个面向对象的替代品
+        setCommand(btn1, menuBar.refresh)
+        setCommand(btn1, subMenu.add)
+        setCommand(btn1, subMenu.del)
+
+        //一下是利用闭包的改写.
+        var setCommand = function (button, command) {
+            button.onclick = function () {
+                command.execute()
+            }
+        }
+
+        var menuBar = {
+            refresh() {
+                console.log('刷新菜单界面')
+            }
+        }
+        var RefreshMenuBarCommand = function (receiver) {
+            return {
+                execute() {
+                    receiver.refresh()
+                }
+            }
+        }
+        var refreshMenuBarCommand = RefreshMenuBarCommand(menuBar)
+        setCommand(btn1, refreshMenuBarCommand)
+
+
+
+*/
+        var tween = {
+            linear(t, b, c, d) {
+                return c * t / d + b
+            },
+            easeIn(t, b, c, d) {
+                return c * (t /= d) + b
+            },
+            strongEaseIn(t, b, c, d) {
+                return c * (t /= d) * t * t * t * t + b
+            },
+            strongEaseOut(t, b, c, d) {
+                return c*((t = t / d - 1) * t * t * t * t + 1) + b
+            },
+            sineaseIn(t, b, c, d) {
+                return c * (t /= d) * t * t + b
+            },
+            sineaseOut(t, b, c, d) {
+                return c * ((t = t / d - 1) * t * t + 1) + b
+            }
+        }
+
+        var Animate = function (dom) {
+            this.dom = dom
+            this.startTime = 0
+            this.startPos = 0
+            this.endPos = 0
+            this.propertyName = null
+            this.easing = null
+            this.duration = null
+        }
+
+        Animate.prototype.start = function (propertyName, endPos, duration, easing) {
+            this.startTime = +new Date
+            //console.log(this.dom)
+            this.startPos = this.dom.getBoundingClientRect()[propertyName]
+            this.propertyName = propertyName
+            this.endPos = endPos
+            this.duration = duration
+            this.easing = tween[easing]
+
+            var self = this
+            var timeId = setInterval(function () {
+                if (self.step() == false) {
+                    clearInterval(timeId)
+                }
+            }, 19)
+        }
+
+        Animate.prototype.step = function () {
+            var t = +new Date
+            if (t >= this.startTime + this.duration) {
+                this.update(this.endPos)
+                return false
+            }
+            var pos = this.easing(t - this.startTime, this.startPos, this.endPos - this.startPos, this.duration)
+            this.update(pos)
+        }
+
+
+        Animate.prototype.update=function(pos){
+            this.dom.style[this.propertyName] = pos + 'px'
+        }
+
+
+
+
+
+
+
+
+        //撤销命令
+        var ball = document.getElementById('ball')
+        var pos = document.getElementById('pos')
+        var moveBtn = document.getElementById('moveBtn')
+        var cancelBtn = document.getElementById('cancelBtn')
+
+
+        var MoveCommand = function(receiver, pos){
+            this.receiver = receiver
+            this.pos = pos
+            this.oldPos = null
+        }
+
+        MoveCommand.prototype.execute = function(){
+            this.receiver.start('left', pos.value, 1000, 'strongEaseOut')
+            this.oldPos = this.receiver.dom.getBoundingClientRect()[this.receiver.propertyName]
+        }
+
+        MoveCommand.prototype.undo = function(){
+            this.receiver.start('left',this.oldPos,1000,'strongEaseOut')
+        }
+
+        //moveCommand就是一个中间对象，用来解耦的
+        var moveCommand 
+        moveBtn.onclick = function(){
+            var animate = new Animate(ball)
+            moveCommand = new MoveCommand(animate, pos.value)
+            moveCommand.execute()
+        }
+
+        cancelBtn.onclick = function(){
+            moveCommand.undo()
+        }
+    </script>
+</body>
