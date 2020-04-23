@@ -22,94 +22,94 @@
         var btn1 = document.getElementById('button1')
         var btn2 = document.getElementById('button2')
         var btn3 = document.getElementById('button3')
-/*
-        var setCommand = function (button, command) {
-            button.onclick = function () {
-                command.execute()
-            }
-        }
-
-        //以下为编写具体功能的代码
-        var menuBar = {
-            refresh() {
-                console.log('刷新菜单目录')
-            }
-        }
-
-        var subMenu = {
-            add() {
-                console.log('添加子菜单')
-            },
-            del() {
-                console.log('删除子菜单')
-            }
-        }
-
-        //这里创建了三个类
-        var RefreshMenuBarCommand = function (receiver) {
-            this.receiver = receiver
-        }
-
-        RefreshMenuBarCommand.prototype.execute = function () {
-            this.receiver.refresh()
-        }
-
-        var AddSubMenuCommand = function (receiver) {
-            this.receiver = receiver
-        }
-
-        AddSubMenuCommand.prototype.execute = function () {
-            this.receiver.add()
-        }
-
-        var DelSubMenuCommand = function (receiver) {
-            this.receiver = receiver
-        }
-
-        DelSubMenuCommand.prototype.execute = function () {
-            this.receiver.del()
-        }
-
-        var refreshMenuBarCommand = new RefreshMenuBarCommand(menuBar)
-        var addSubMenuCommand = new AddSubMenuCommand(subMenu)
-        var delSubMenuCommand = new delSubMenuCommand(subMenu)
-        //这样就完成解耦，，，但是感觉好麻烦
-        setCommand(btn1, refreshMenuBarCommand)
-        setCommand(btn2, addSubMenuCommand)
-        setCommand(btn3, delreshMenuBarCommand)
-
-
-        //以下是js中的实现，因为js中函数是一等公民，可以当做参数传入
-        //命令模式的由来，其实是cb函数的一个面向对象的替代品
-        setCommand(btn1, menuBar.refresh)
-        setCommand(btn1, subMenu.add)
-        setCommand(btn1, subMenu.del)
-
-        //一下是利用闭包的改写.
-        var setCommand = function (button, command) {
-            button.onclick = function () {
-                command.execute()
-            }
-        }
-
-        var menuBar = {
-            refresh() {
-                console.log('刷新菜单界面')
-            }
-        }
-        var RefreshMenuBarCommand = function (receiver) {
-            return {
-                execute() {
-                    receiver.refresh()
+        /*
+                var setCommand = function (button, command) {
+                    button.onclick = function () {
+                        command.execute()
+                    }
                 }
-            }
-        }
-        var refreshMenuBarCommand = RefreshMenuBarCommand(menuBar)
-        setCommand(btn1, refreshMenuBarCommand)
-
-
-
-*/
+        
+                //以下为编写具体功能的代码
+                var menuBar = {
+                    refresh() {
+                        console.log('刷新菜单目录')
+                    }
+                }
+        
+                var subMenu = {
+                    add() {
+                        console.log('添加子菜单')
+                    },
+                    del() {
+                        console.log('删除子菜单')
+                    }
+                }
+        
+                //这里创建了三个类
+                var RefreshMenuBarCommand = function (receiver) {
+                    this.receiver = receiver
+                }
+        
+                RefreshMenuBarCommand.prototype.execute = function () {
+                    this.receiver.refresh()
+                }
+        
+                var AddSubMenuCommand = function (receiver) {
+                    this.receiver = receiver
+                }
+        
+                AddSubMenuCommand.prototype.execute = function () {
+                    this.receiver.add()
+                }
+        
+                var DelSubMenuCommand = function (receiver) {
+                    this.receiver = receiver
+                }
+        
+                DelSubMenuCommand.prototype.execute = function () {
+                    this.receiver.del()
+                }
+        
+                var refreshMenuBarCommand = new RefreshMenuBarCommand(menuBar)
+                var addSubMenuCommand = new AddSubMenuCommand(subMenu)
+                var delSubMenuCommand = new delSubMenuCommand(subMenu)
+                //这样就完成解耦，，，但是感觉好麻烦
+                setCommand(btn1, refreshMenuBarCommand)
+                setCommand(btn2, addSubMenuCommand)
+                setCommand(btn3, delreshMenuBarCommand)
+        
+        
+                //以下是js中的实现，因为js中函数是一等公民，可以当做参数传入
+                //命令模式的由来，其实是cb函数的一个面向对象的替代品
+                setCommand(btn1, menuBar.refresh)
+                setCommand(btn1, subMenu.add)
+                setCommand(btn1, subMenu.del)
+        
+                //一下是利用闭包的改写.
+                var setCommand = function (button, command) {
+                    button.onclick = function () {
+                        command.execute()
+                    }
+                }
+        
+                var menuBar = {
+                    refresh() {
+                        console.log('刷新菜单界面')
+                    }
+                }
+                var RefreshMenuBarCommand = function (receiver) {
+                    return {
+                        execute() {
+                            receiver.refresh()
+                        }
+                    }
+                }
+                var refreshMenuBarCommand = RefreshMenuBarCommand(menuBar)
+                setCommand(btn1, refreshMenuBarCommand)
+        
+        
+        
+        */
         var tween = {
             linear(t, b, c, d) {
                 return c * t / d + b
@@ -121,7 +121,7 @@
                 return c * (t /= d) * t * t * t * t + b
             },
             strongEaseOut(t, b, c, d) {
-                return c*((t = t / d - 1) * t * t * t * t + 1) + b
+                return c * ((t = t / d - 1) * t * t * t * t + 1) + b
             },
             sineaseIn(t, b, c, d) {
                 return c * (t /= d) * t * t + b
@@ -169,7 +169,7 @@
         }
 
 
-        Animate.prototype.update=function(pos){
+        Animate.prototype.update = function (pos) {
             this.dom.style[this.propertyName] = pos + 'px'
         }
 
@@ -187,31 +187,144 @@
         var cancelBtn = document.getElementById('cancelBtn')
 
 
-        var MoveCommand = function(receiver, pos){
+        var MoveCommand = function (receiver, pos) {
             this.receiver = receiver
             this.pos = pos
             this.oldPos = null
         }
 
-        MoveCommand.prototype.execute = function(){
+        MoveCommand.prototype.execute = function () {
             this.receiver.start('left', pos.value, 1000, 'strongEaseOut')
             this.oldPos = this.receiver.dom.getBoundingClientRect()[this.receiver.propertyName]
         }
 
-        MoveCommand.prototype.undo = function(){
-            this.receiver.start('left',this.oldPos,1000,'strongEaseOut')
+        MoveCommand.prototype.undo = function () {
+            this.receiver.start('left', this.oldPos, 1000, 'strongEaseOut')
         }
 
         //moveCommand就是一个中间对象，用来解耦的
-        var moveCommand 
-        moveBtn.onclick = function(){
+        var moveCommand
+        moveBtn.onclick = function () {
             var animate = new Animate(ball)
             moveCommand = new MoveCommand(animate, pos.value)
             moveCommand.execute()
         }
 
-        cancelBtn.onclick = function(){
+        cancelBtn.onclick = function () {
             moveCommand.undo()
         }
+
+        //在开发中可以利用历史列表堆栈来记录命令，对于一些不方便撤销的，如canvas作图，可以
+        //从堆栈中找到历史记录重画
+        //下例：
+        var Ryu = {
+            attack: function () {
+                console.log('攻击')
+            },
+            defense: function () {
+                console.log('防御')
+            },
+            jump: function () {
+                console.log('跳跃')
+            },
+            crouch: function () {
+                console.log('蹲下')
+            }
+        }
+
+        var commandStack = []
+
+        var makeCommand = function (receiver, state) {
+            return function () {
+                receiver[state]()
+            }
+        }
+        var commands = {
+            '119': "jump",
+            '115': "crouch",
+            "97": "defense",
+            "100": "attack"
+        }
+
+        document.onkeypress = function(ev){
+            var keyCode = ev.keyCode
+            command = makeCommand(Ryu, commands[keyCode])
+
+            if(command){
+                command()
+                commandStack.push(command) //是函数栈
+            }
+        }
+
+        document.getElementById('replay').onclick = function(){
+            var command
+            //栈空了while undefined退出循环
+            while (command=commandStack.shift()) {
+                command()
+            }
+        }
+
+        //命令队列：小球动画，连续点击的时候会打断上一个动画，因此要把命令放入队列中
+        //等待第一个动画结束，再开始第二个动画
+        //思路：按下鼠标就执行命令，把命令推入栈内，当上一个函数结束了在调用下一个函数
+        //伪代码实现
+
+        //这一段想到了vue的组件更新队列
+        const animateStack =[]
+        document.getElementById('animateDiv').onclick = function(fn){
+            if(animateStack.length > 0){
+                animateStack.push(fn)
+            }else{
+                fn()
+                myEvent.emit('next')
+            }
+        }
+        const handler = () => {
+            while (animateStack.length > 0) {
+                animateStack.pop()()
+            }
+        }
+        myEvent.on('next', handler)
+
+        //宏命令：一组命令的集合
+        var closeDoorCommand ={
+            execute(){
+                console.log('关门')
+            }
+        }
+
+        var openPcCommand ={
+            execute(){
+                console.log('开电脑')
+            }
+        }
+
+        var openQQCommand ={
+            execute(){
+                console.log('登录QQ')
+            }
+        }
+
+        var MacroCommand = function(){
+            return {
+                commandsList:[],
+                add(command){
+                    this.commandsList.push(command)
+                },
+                execute(){
+                    for(var i = 0; command; command = this.commandsList[i++]){
+                        command.execute()
+                    }
+                }
+            }
+        }
+
+        var macroCommand = MacroCommand()
+        macroCommand.add(closeDoorCommand)
+        macroCommand.add(openPcCommand)
+        macroCommand.add(openQQCommand)
+
+        //智能命令与傻瓜命令
+        //类似于傻瓜组件的概念，有自己的state没有自己的state
     </script>
 </body>
