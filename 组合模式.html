@@ -1,0 +1,207 @@
+<body>
+    <button id="button">按我</button>
+    <script>
+
+        var MacroCommand = function () {
+            //每次返回的都是一个新的对象
+            return {
+                commandList: [],
+                add(command) {
+                    this.commandList.push(command)
+                },
+                execute() {
+                    for (var i = 0, command; command = this.commandList[i++];) {
+                        command.execute()
+                    }
+                }
+            }
+        }
+
+        var openCommand = {
+            execute() {
+                console.log('打开空调')
+            }
+        }
+
+        var openTvCommand = {
+            execute() {
+                console.log('打开电视')
+            }
+        }
+        var openSoundComman = {
+            execute() {
+                console.log('打开音响')
+            }
+        }
+        //简单的组合命令：打开电视，打开音响
+        var macroCommand1 = MacroCommand()
+        macroCommand1.add(openTvCommand)
+        macroCommand1.add(openCommand)
+        //macroCommand.execute()
+
+        //关门 开电脑 登QQ
+        var closeDoorCommand = {
+            execute() {
+                console.log('关门')
+            }
+        }
+
+        var openPcCommand = {
+            execute() {
+                console.log('开电脑')
+            }
+        }
+
+        var openQQCommand = {
+            execute() {
+                console.log('登QQ')
+            }
+        }
+
+        var macroCommand2 = MacroCommand()
+        macroCommand2.add(closeDoorCommand)
+        macroCommand2.add(openCommand)
+        macroCommand2.add(openQQCommand)
+
+        //将两个简单对象合并成一个复杂对象
+        var macroCommand = MacroCommand()
+        macroCommand.add(macroCommand1)
+        macroCommand.add(macroCommand2)
+
+        //var setCommand 为什么不能省略？？
+        var setCommand = (function (command) {
+            document.querySelector('#button').onclick = function () {
+                command.execute()
+            }
+        })(macroCommand)
+
+        //抽象类在组合模式中的应用 //抽象类的作用：定义方法，具体实现方法由子类定义
+        /*public abstract class Component{
+            public void add(Component child){}
+            public void remove(Component child){}
+        }
+
+        public class Composite extends Component{
+            public void add(Component child){}
+            public void remove(Component child){}
+        }
+
+        public class Leaf extends Component{
+            public void add(Component child){
+                threw new UnsupportedOperationException()//叶对象不能再添加子节点
+            }
+
+            public void remove(Component child){
+
+            }
+        }
+
+        public class client(){
+            public static void main(String args[]){
+                Component root = new Composite()
+                Component c1 = new Composite()
+                Component c2 = new Composite()
+
+                Component leaf1 = new Leaf()
+                Component leaf2 = new Leaf()
+
+                root.add(c1)
+                root.add(c2)
+
+                c1.add(leaf1)
+                c2.add(leaf2)
+
+                root.remove()
+            }
+        }*/
+
+        //透明性带来的安全问题
+        //组合模式的透明性使得发起请求的客户不用去顾及树中组合对象和叶对象的去比额，但是本质上是有区别的
+        //解决方法：给叶对象的方法中主动抛错
+
+        //叶对象 开电视
+        var openTvCommand = {
+            execute() {
+                console.log('打开电视')
+            },
+            add() {
+                throw new Error('叶对象不能添加子对象')
+            }
+        }
+
+        //组合模式的例子：扫描文件夹
+        var Folder = function (name) {
+            this.name = name
+            this.files = []
+        }
+
+        Folder.prototype.add = function (file) {
+            this.files.push(file)
+        }
+
+        Folder.prototype.scan = function () {
+            console.log('开始扫描文件夹: ' + this.name)
+            for (var i = 0, file, files = this.files; file = this.files[i++];) {
+                file.scan()
+            }
+        }
+
+        var File = function (name) {
+            this.name = name
+        }
+
+        File.prototype.add = function () {
+            throw new Error('文件中不能再添加文件')
+        }
+        File.prototype.scan = function () {
+            console.log('开始扫描文件：' + this.name)
+        }
+
+        var folder = new Folder('学习资料')
+        var folder1 = new Folder('JavaScript')
+        var folder2 = new Folder('JQuery')
+
+        var file1 = new File('JavaScript设计模式与开发实践')
+        var file2 = new File('精通JQuery')
+        var file3 = new File('重构与模式')
+
+        //树状结构：典型的就是文件夹结构
+        folder1.add(file1)
+        folder2.add(file2)
+        folder.add(folder1)
+        folder.add(folder2)
+        folder.add(file3)
+
+        //假设上方的folder是已有的文件夹
+        //现在新添文件
+        var folder3 = new Folder('Nodejs')
+        var file4 = new File('深入简出Node.js')
+        folder3.add(file4)
+
+        var file5 = new File('JavaScript语言精髓与编程实战')
+
+        folder.add(folder3)
+        folder.add(file5)
+
+        folder.scan()
+
+        //一些值得注意的地方
+        /**
+         * 1. 组合模式不是父子关系：本质是一种HAS-A聚合的关系，不是IS-A。
+         * 组合对象把请求委托给他所包含的所有叶对象，关机是拥有【相同的接口】
+         * 
+         * 2. 对【一组】叶对象操作的一致性：用一致的方式对待列表中的每个也对象
+         * 比如公司对全体员工发放红包可以用组合模式，但是如果只针对过生日的工作人员发红包，那么就无用武之地
+         * 
+         * 3. 双向映射关系
+         * 继续使用发红包案例：一个员工可以隶属不同组，如果每个组都各自执行，那么一定会有人拿双份红包
+         * 这种情况下，要再组合对象和叶对象添加集合以保存对方的引用，但是互相引用很复杂，需要【中介者模式】来管理这些对象
+         * 
+         * 4. 用职责链模式来提高组合模式的性能
+         * 组合模式中，树结构比复杂，节点数量众多的时候，性能比较差。因此借助一些技巧，再实际操作中避免遍历整棵树：职责链模式
+         * 职责链模式需要手动设置链条，但是在组合模式中，其实父对象与子对象已经有了天然的职责链。
+         * 请求可以顺着链条从父对象往子对象传递，也可以从子对象向父对象传递。直到可以处理该请求的对象位置。
+         * 这也是职责链模式的经典运用场景之一。
+         */
+    </script>
+</body>
