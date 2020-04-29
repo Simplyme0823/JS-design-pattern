@@ -202,6 +202,82 @@
          * 职责链模式需要手动设置链条，但是在组合模式中，其实父对象与子对象已经有了天然的职责链。
          * 请求可以顺着链条从父对象往子对象传递，也可以从子对象向父对象传递。直到可以处理该请求的对象位置。
          * 这也是职责链模式的经典运用场景之一。
-         */
+        */
+        //对上述文件夹例子的改写：添加父节点 有点双向链表的感觉
+        var Folder = function (name) {
+            this.name = name
+            this.parent = null
+            this.files = []
+        }
+        Folder.prototype.add = function (file) {
+            file.parent = this
+            this.files.push(file)
+        }
+
+        Folder.prototype.scan = function () {
+            console.log('开始扫描文件夹：' + this.name)
+            for (var i = 0, file, files = this.files; file = files[i++];) {
+                file.scan()
+            }
+        }
+        //删除自身
+        Folder.prototype.remove = function () {
+            if (!this.parent) {//根节点或者是游离在体系外的节点
+                return
+            }
+            for (var files = this.parent.files, l = files.length - 1; l >= 0; l--) {
+                var file = filse[l]
+                if (file === this) {
+                    //后面倒叙是为了方便删除
+                    files.splice(l, 1)
+                }
+            }
+        }
+
+        var File = function (name) {
+            this.name = name
+            this.parent = null
+        }
+
+        File.prototype.add = function () {
+            throw new Error('不能添加在文件下面')
+        }
+
+        File.prototype.scan = function () {
+            console.log('开始扫描文件：' + this.name)
+        }
+
+        File.prototype.remove = function () {
+            if (!this.parent) {//根节点或者是游离在体系外的节点
+                return
+            }
+            for (var files = this.parent.files, l = files.length - 1; l >= 0; l--) {
+                var file = files[l]
+                if (file === this) {
+                    files.splice(l, 1)
+                }
+            }
+        }
+
+        var folder = new Folder('学习资料')
+        var folder1 = new Folder('JavaScript')
+        var file1 = new Folder('深入浅出Node.js')
+        
+        folder1.add(new File('JavaScript 设计模式与开发实践'))
+        folder.add(folder1)
+        folder.add(file1)
+
+        folder1.remove()
+        folder.scan()
+
+        //组合模式的使用情况
+        // 1. 表示对象的部分-整体层次结构，组合模式可以方便地构造一棵树来表示对象的部分-整体，开发过程中
+        //    如果不清楚有多少层，那么只要听过请求树的最顶层对象，便能对整棵树做统一的操作
+        // DOM的事件捕捉机制？
+
+        //2. 统一对待树种的所有对象的时候，不关心处理对象是父对象还是根对象，对象会各自做自己争取的时候，不用一堆 if else来处理
+
+        //缺点，每个对象看起来都差不多，duck类型，并且一旦树很庞大，那么创建那么多对象会吃内存
+
     </script>
 </body>

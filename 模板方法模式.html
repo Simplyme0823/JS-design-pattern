@@ -1,0 +1,122 @@
+<body>
+    <script>
+        //模板方法模式是一种只需要使用【继承】就可以实现的非常简单的模式
+
+        //part1 抽象父类
+        //part2 具体的实现子类
+
+        //情景：实现抽象方法的时候，各个子类之间会有相同的方法和不同的方法
+        // 把相同的方法抽离出来，单独管理
+        // 模板方法就是 把相同的方法【上移】至父类中，子类就留下不同的方法
+
+
+        var Coffee = function(){}
+        Coffee.prototype.boilWater = function(){
+            console.log('把水煮沸')
+        }
+        Coffee.prototype.brewCoffeeGriends = function(){
+            console.log('用沸水冲泡咖啡')
+        }
+        Coffee.prototype.pourInCup = function(){
+            console.log('把咖啡倒进杯子')
+        }
+        Coffee.prototype.addSugarAndmild = function(){
+            console.log('加糖和牛奶')
+        }
+        Coffee.prototype.init=function(){
+            this.boilWater()
+            this.brewCoffeeGriends()
+            this.pourInCup()
+            this.addSugarAndmild()
+        }
+        var coffee = new Coffee()
+        coffee.init()
+
+        //泡茶
+        var Tea = function(){}
+        Tea.prototype.boilWater = function(){
+            console.log('把水煮沸')
+        }
+        Tea.prototype.brewTeaGriends = function(){
+            console.log('用沸水冲泡茶')
+        }
+        Tea.prototype.pourInCup = function(){
+            console.log('把茶倒进杯子')
+        }
+        Tea.prototype.addSugarAndmild = function(){
+            console.log('加柠檬')
+        }
+        Tea.prototype.init=function(){
+            this.boilWater()
+            this.brewTeaGriends()
+            this.pourInCup()
+            this.addSugarAndmild()
+        }
+        var tea = new Tea()
+        tea.init()
+
+        //抽离的分析
+        //1. 茶和咖啡 都抽象成饮品
+        //2. 泡咖啡和泡茶 都是泡这个动作
+        //3. 一个加糖和牛奶 一个加柠檬 都是加调料
+
+        //抽象类
+        var Beverage = function(){}
+        Beverage.prototype.boilWater = function(){
+            console.log('把水煮沸')
+        }
+        Beverage.prototype.brew = function(){
+            //空方法，由子类重写
+        }
+        Beverage.prototype.pourInCup = function(){
+
+        }
+        Beverage.prototype.addCondiments = function(){
+
+        }
+        Beverage.prototype.init = function(){
+            this.boilWater()
+            this.brew()
+            this.pourInCup()
+            this.addCondiments()
+        }
+
+        //创建子类
+        var Coffee = function(){}
+        Coffee.prototype = new Beverage()
+        //原型链指向
+        Coffee.prototype.boilWater = function(){
+            console.log('把水煮沸')
+        }
+        Coffee.prototype.brewCoffeeGriends = function(){
+            console.log('用沸水冲泡咖啡')
+        }
+        Coffee.prototype.pourInCup = function(){
+            console.log('把咖啡倒进杯子')
+        }
+        Coffee.prototype.addSugarAndmild = function(){
+            console.log('加糖和牛奶')
+        }
+        var coffee = new Coffee()
+        coffee.init()
+
+        var Tea = function(){}
+        Tea.prototype.boilWater = function(){
+            console.log('把水煮沸')
+        }
+        Tea.prototype.brewTeaGriends = function(){
+            console.log('用沸水冲泡茶')
+        }
+        Tea.prototype.pourInCup = function(){
+            console.log('把茶倒进杯子')
+        }
+        Tea.prototype.addSugarAndmild = function(){
+            console.log('加柠檬')
+        }
+        var tea = new Tea()
+        tea.init()
+
+        //Beverage.prototype.init才是被称为模板方法
+        //该方法中封装了子类的算法框架，作为算法的一个模板，指导子类以何种顺序去执行哪些方法
+    </script>
+</body>
