@@ -10,20 +10,20 @@
         // 模板方法就是 把相同的方法【上移】至父类中，子类就留下不同的方法
 
 
-        var Coffee = function(){}
-        Coffee.prototype.boilWater = function(){
+        var Coffee = function () { }
+        Coffee.prototype.boilWater = function () {
             console.log('把水煮沸')
         }
-        Coffee.prototype.brewCoffeeGriends = function(){
+        Coffee.prototype.brewCoffeeGriends = function () {
             console.log('用沸水冲泡咖啡')
         }
-        Coffee.prototype.pourInCup = function(){
+        Coffee.prototype.pourInCup = function () {
             console.log('把咖啡倒进杯子')
         }
-        Coffee.prototype.addSugarAndmild = function(){
+        Coffee.prototype.addSugarAndmild = function () {
             console.log('加糖和牛奶')
         }
-        Coffee.prototype.init=function(){
+        Coffee.prototype.init = function () {
             this.boilWater()
             this.brewCoffeeGriends()
             this.pourInCup()
@@ -33,20 +33,20 @@
         coffee.init()
 
         //泡茶
-        var Tea = function(){}
-        Tea.prototype.boilWater = function(){
+        var Tea = function () { }
+        Tea.prototype.boilWater = function () {
             console.log('把水煮沸')
         }
-        Tea.prototype.brewTeaGriends = function(){
+        Tea.prototype.brewTeaGriends = function () {
             console.log('用沸水冲泡茶')
         }
-        Tea.prototype.pourInCup = function(){
+        Tea.prototype.pourInCup = function () {
             console.log('把茶倒进杯子')
         }
-        Tea.prototype.addSugarAndmild = function(){
+        Tea.prototype.addSugarAndmild = function () {
             console.log('加柠檬')
         }
-        Tea.prototype.init=function(){
+        Tea.prototype.init = function () {
             this.boilWater()
             this.brewTeaGriends()
             this.pourInCup()
@@ -61,20 +61,20 @@
         //3. 一个加糖和牛奶 一个加柠檬 都是加调料
 
         //抽象类
-        var Beverage = function(){}
-        Beverage.prototype.boilWater = function(){
+        var Beverage = function () { }
+        Beverage.prototype.boilWater = function () {
             console.log('把水煮沸')
         }
-        Beverage.prototype.brew = function(){
+        Beverage.prototype.brew = function () {
             //空方法，由子类重写
         }
-        Beverage.prototype.pourInCup = function(){
+        Beverage.prototype.pourInCup = function () {
 
         }
-        Beverage.prototype.addCondiments = function(){
+        Beverage.prototype.addCondiments = function () {
 
         }
-        Beverage.prototype.init = function(){
+        Beverage.prototype.init = function () {
             this.boilWater()
             this.brew()
             this.pourInCup()
@@ -82,41 +82,192 @@
         }
 
         //创建子类
-        var Coffee = function(){}
+        var Coffee = function () { }
         Coffee.prototype = new Beverage()
         //原型链指向
-        Coffee.prototype.boilWater = function(){
+        Coffee.prototype.boilWater = function () {
             console.log('把水煮沸')
         }
-        Coffee.prototype.brewCoffeeGriends = function(){
+        Coffee.prototype.brewCoffeeGriends = function () {
             console.log('用沸水冲泡咖啡')
         }
-        Coffee.prototype.pourInCup = function(){
+        Coffee.prototype.pourInCup = function () {
             console.log('把咖啡倒进杯子')
         }
-        Coffee.prototype.addSugarAndmild = function(){
+        Coffee.prototype.addSugarAndmild = function () {
             console.log('加糖和牛奶')
         }
         var coffee = new Coffee()
         coffee.init()
 
-        var Tea = function(){}
-        Tea.prototype.boilWater = function(){
+        var Tea = function () { }
+        Tea.prototype.boilWater = function () {
             console.log('把水煮沸')
         }
-        Tea.prototype.brewTeaGriends = function(){
+        Tea.prototype.brewTeaGriends = function () {
             console.log('用沸水冲泡茶')
         }
-        Tea.prototype.pourInCup = function(){
+        Tea.prototype.pourInCup = function () {
             console.log('把茶倒进杯子')
         }
-        Tea.prototype.addSugarAndmild = function(){
+        Tea.prototype.addSugarAndmild = function () {
             console.log('加柠檬')
         }
         var tea = new Tea()
-        tea.init()
+        //tea.init()
 
         //Beverage.prototype.init才是被称为模板方法
         //该方法中封装了子类的算法框架，作为算法的一个模板，指导子类以何种顺序去执行哪些方法
+
+        //虽然js中没有抽象类，但是可以通过es6的new.target模仿抽象类
+        class Animal {
+            constructor(name, age) {
+                console.log(new.target.prototype)////Animarl{}
+                if (new.target === Animal) {
+                    throw new Error('Animal class can`t instantiate');
+                }
+                //模仿抽象方法
+                if (new.target !== Animal && !new.target.prototype.hasOwnProperty('getName')) {
+                    throw new Error('please overwrite getName method');
+                }
+                this.name = name
+                this.age = age
+            }
+            // 其他代码
+            //...
+        }
+
+        class Dog extends Animal {
+            constructor() {
+                console.log(new.target.prototype)//Animarl{}
+
+                super('dog', 1)
+            }
+        }
+        //由上述例子可以看出派生类的构造函数运行的时候 调用了 抽象类的构造函数，但是new.target都是不变的
+        //都是Dog这个派生类，因此可以利用这一特点来提醒派生类要重写抽象方法
+
+        //而在es5中并没有new.target属性，因此只能在抽象类中书写如下代码
+        Beverage.prototype.method = function () {
+            throw new Error('派生类必须重写method方法')
+        }
+
+        //检测bug的时机
+        //1. 编写代码的时候编译器检查
+        //2. 创建对象的时候“接口检查”
+        //3. 运行时候才知道
+
+
+        //模板方法模式的使用场景
+        //架构师搭建项目的框架，订好骨架，剩下工程师往里面填内容
+
+        //Web开发中：构建组件的策略
+        //1. 初始化一个div容器
+        //2. ajax请求数据
+        //3. 数据渲染到div容器，完成组件构造
+        //4. 通知用户组件渲染完毕
+    </script>
+
+    <script>
+        //通过模板方法模式，在父类中封装了子类的算法框架，框架具有普遍性，但是如果有一些特别“个性”的子类呢？
+        //之前封装的4个步骤：煮沸，跑饮料，饮料倒进杯子，加调料
+        //如果有写客户不喜欢 加调料呢？？
+
+        //可以使用Hook方法来解决
+        var Beverage = function () { }
+        Beverage.prototype.boilWater = function () {
+            console.log("把水煮沸")
+        }
+        Beverage.prototype.brew = function () {
+            throw new Error('子类必须重写brew方法') // 会报错是因为在运行的时候子类实例没有brew方法，会寻找原型链上的方法
+        }
+        Beverage.prototype.pourInCup = function () {
+            throw new Error('子类必须重写pourInCup方法')
+        }
+        Beverage.prototype.addCondiments = function () {
+            throw new Error("子类必须重写addCondiments方法")
+        }
+        Beverage.prototype.customerWantsCondiments = function () {
+            return true
+        }
+        Beverage.prototype.init = function () {
+            this.boilWater()
+            this.pourInCup()
+            this.pourInCup()
+            if (this.customerWantsCondiments()) {
+                this.addCondiments()
+            }
+        }
+
+        var CoffeeWithHook = function () { }
+        CoffeeWithHook.prototype = new Beverage()
+        CoffeeWithHook.prototype.boilWater = function () {
+            console.log('把水煮沸')
+        }
+        CoffeeWithHook.prototype.brewCoffeeGriends = function () {
+            console.log('用沸水冲泡咖啡')
+        }
+        CoffeeWithHook.prototype.pourInCup = function () {
+            console.log('把咖啡倒进杯子')
+        }
+        CoffeeWithHook.prototype.addSugarAndmild = function () {
+            console.log('加糖和牛奶')
+        }
+        CoffeeWithHook.prototype.customerWantsCondiments = function () {
+            return window.confirm("请问需要调料吗？")
+        }
+
+        var coffeeWithHook = new CoffeeWithHook()
+        coffeeWithHook.init()
+    </script>
+    新的设计原则-------‘好莱坞原则’
+    将底层组件挂钩到高层组件之中，当高层组件决定什么时候，以何种方式来调用浙西额底层组件：“别调用我们，等我们调用你”
+
+    这也意味着子类放弃了对自己的控制权，类似于react概念中的傻瓜组件
+
+    好莱坞原则的场景两则：1.发布订阅模式；2.回调函数
+    <script>
+        //上述的代码都是模仿传统的oop
+        //在js中一切都可以被认为是对象，继承其实也是通过对象之间的委托来【模仿】实现的
+        //改写后的代码
+        var Beverage = function (param) {
+            var boilWater = function () {
+                console.log("把水煮沸")
+            }
+            var brew = param.brew || function () {
+                throw new Error('子类必须重写brew方法') // 会报错是因为在运行的时候子类实例没有brew方法，会寻找原型链上的方法
+            }
+            var pourInCup = param.pourInCup || function () {
+                throw new Error('子类必须重写pourInCup方法')
+            }
+            var addCondiments = param.addCondiments || function () {
+                throw new Error("子类必须重写addCondiments方法")
+            }
+            var F = function () { }
+            F.prototype.init = function () {
+                boilWater()
+                brew()
+                pourInCup()
+                addCondiments()
+            }
+            //返回一个构造函数
+            return F
+        }
+
+        var Coffee = Beverage({
+            brew: function () {
+                console.log('用沸水冲泡咖啡')
+            },
+            pourInCup:function(){
+                console.log("把咖啡倒入杯中")
+            },
+            addCondiments:function(){
+                console.log('加糖和牛奶')
+            }
+        })
+
+        var coffee = new Coffee()
+        coffee.init()
+
     </script>
 </body>
