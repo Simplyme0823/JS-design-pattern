@@ -1,0 +1,198 @@
+<body>
+    <script>
+        //50个模特，每个模特一种衣服
+        /*       var Model = function (sex, underware) {
+                   this.sex = sex
+                   this.underware = underware
+               }
+       
+               Model.prototype.takePhoto = function () {
+                   console.log(`sex= ${this.sex}, underware = ${this.underware}`)
+               }
+       
+               for (var i = 1; i <= 50; i++) {
+                   var maleModel = new Model('male', 'underware' + i)
+                   maleModel.takePhoto()
+               }
+       
+               //缺点：太多模特实例，占内存
+               //改进,只用一个模特 穿50种衣服
+               var Model = function (sex) {
+                   this.sex = sex
+               }
+       
+               Model.prototype.takePhoto = function () {
+                   console.log(`sex= ${this.sex}, underware = ${this.underware}`)
+               }
+               var maleModel = new Model('male')
+               for (var i = 1; i <= 50; i++) {
+                   maleModel.underware = underware + i
+                   maleModel.takePhoto()
+               }
+       */
+
+        //以上把对象的属性划分成立两个部分：内部属性/外部属性
+        //其中性别为内部属性，衣服种类为外部属性
+        //分类一局：
+        //内部状态存储于对象内部  如this.sex = sex
+        //内部状态可以被一些对象共享
+        //内部状态独立于具体的场景，通常不会改变
+        //外部状态取决于具体的场景，并根据场景而变化，外部状态不能被共享
+
+        //这样一来可以内部状态都相同的对象指定为同意共享的对象 如50个模特->1个模特
+        //外部状态剥离出来，分开储存，如专门有一个对象管理50种衣服
+
+        //在具体的应用场景中，调用共享对象，并结合具体的外部属性 就可以创造适用于该场景的对象
+        //虽然组装对象花费时间，但是节省了内存空间，是一个时间换空间的方法。
+
+
+
+        //以上的案例有些僵硬
+        //1.懒加载，需要的是才被创造出来
+        //2.管理器记录对象相关的外部状态，是这些外部状态通过某个狗子与共享对象联系
+
+        //文件上传案例 
+/*
+        var id = 0;
+        window.startUpload = function (uploadType, files) {
+            for (var i = 0, file; file = files[i++];) {
+                var uploadObj = new Upload(uploadType, file.fileName, file.fileSize)
+                uploadObj.init(id++)
+            }
+        }
+
+        var Upload = function (uploadType, fileName, fileSize) {
+            this.uploadType = uploadType
+            this.fileName = fileName
+            this.fileSize = fileSize
+            this.dom = null
+        }
+
+        Upload.prototype.init = function (id) {
+            var that = this
+            this.id = id
+            this.dom = document.createElement('div')
+            this.dom.innerHTML = '<span>文件名称：' + this.fileName + ', 文件大小：' + this.fileSize +
+                '<span>' + '<button class="delFile">删除</button>'
+            this.dom.querySelector('.delFile').onclick = function () {
+                that.delFile()
+            }
+            document.body.appendChild(this.dom)
+        }
+
+        Upload.prototype.delFile = function () {
+            if (this.fileSize < 3000) {
+                return this.dom.parentNode.removeChild(this.dom)
+            }
+            if (window.confirm('确定要删除文件吗？' + this.fileName)) {
+                return this.dom.parentNode.removeChild(this.dom)
+            }
+        }
+
+                startUpload('plugin', [
+            {
+                fileName: '1.txt',
+                fileSize: 1000
+            },
+            {
+                fileName: '2.txt',
+                fileSize: 3000
+            },
+            {
+                fileName: '3.txt',
+                fileSize: 5000
+            }
+        ])
+
+*/
+
+
+    </script>
+    <script>
+        //代码重构，避免使用多个实例
+        //fileName fileSize是外部属性
+        //id uloadType是内部属性
+        var Upload = function (uploadType) {
+            this.uploadType = uploadType
+        }
+
+        Upload.prototype.delFile = function (id) {
+            uploadManager.setExternalState(id, this)
+            console.log(this)
+            if (this.fileSize < 3000) {
+                return this.dom.parentNode.removeChild(this.dom)
+            }
+            if (window.confirm('确定要删除文件吗？' + this.fileName)) {
+                return this.dom.parentNode.removeChild(this.dom)
+            }
+        }
+
+        //cache不同类型的对象，按需创造  优化点1
+        var UploadFactory = (function () {
+            var createdFlyWeightObjs = {}
+            return {
+                create: function (uploadType) {
+                    if (createdFlyWeightObjs[uploadType]) {
+                        return createdFlyWeightObjs[uploadType]
+                    }
+                    return createdFlyWeightObjs[uploadType] = new Upload(uploadType)
+                }
+            }
+        })()
+
+        //管理器，管理外部状态
+        var uploadManager = (function () {
+            var uploadDatabase = {}
+            return {
+                add: function (id, uploadType, fileName, fileSize) {
+                    var flyWeightObj = UploadFactory.create(uploadType)
+                    var dom = document.createElement('div')
+                    dom.innerHTML = '<span>文件名称：' + fileName + ', 文件大小：' + fileSize +
+                        '<span>' + '<button class="delFile">删除</button>'
+                    dom.querySelector('.delFile').onclick = function () {
+                        flyWeightObj.delFile()
+                    }
+                    document.body.appendChild(dom)
+
+                    uploadDatabase[id]={
+                        fileName,
+                        fileSize,
+                        dom
+                    }
+                    return flyWeightObj
+                },
+                setExternalState:function(id, flyWeightObj){
+                    var uploadData = uploadDatabase[id]
+                    for(var i in uploadData){
+                        console.log(i)
+                        // fileName, fileSize, dom绑定到flyWeightObj对象身上
+                        flyWeightObj[i] = uploadData[i]
+                    }
+                }
+            }
+        })()
+
+        var id = 0
+        window.startUpload = function(uploadType, files){
+            for(var i =0,file;file = files[i++];){
+                var uploadObj = uploadManager.add(++id, uploadType, file.fileName,file.fileSize)
+            }
+        }
+
+        startUpload('plugin', [
+            {
+                fileName: '1.txt',
+                fileSize: 1000
+            },
+            {
+                fileName: '2.txt',
+                fileSize: 3000
+            },
+            {
+                fileName: '3.txt',
+                fileSize: 5000
+            }
+        ])
+
+    </script>
+</body>

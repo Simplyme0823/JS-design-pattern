@@ -122,7 +122,7 @@
         //虽然js中没有抽象类，但是可以通过es6的new.target模仿抽象类
         class Animal {
             constructor(name, age) {
-                console.log(new.target.prototype)////Animarl{}
+                console.log(new.target)////Animarl{}
                 if (new.target === Animal) {
                     throw new Error('Animal class can`t instantiate');
                 }
@@ -139,11 +139,11 @@
 
         class Dog extends Animal {
             constructor() {
-                console.log(new.target.prototype)//Animarl{}
-
+                console.log(new.target)//Animarl{}
                 super('dog', 1)
             }
         }
+        const dog = new Dog()
         //由上述例子可以看出派生类的构造函数运行的时候 调用了 抽象类的构造函数，但是new.target都是不变的
         //都是Dog这个派生类，因此可以利用这一特点来提醒派生类要重写抽象方法
 
