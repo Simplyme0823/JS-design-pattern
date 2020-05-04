@@ -1,35 +1,35 @@
 <body>
     <script>
         //50个模特，每个模特一种衣服
-        /*       var Model = function (sex, underware) {
-                   this.sex = sex
-                   this.underware = underware
-               }
-       
-               Model.prototype.takePhoto = function () {
-                   console.log(`sex= ${this.sex}, underware = ${this.underware}`)
-               }
-       
-               for (var i = 1; i <= 50; i++) {
-                   var maleModel = new Model('male', 'underware' + i)
-                   maleModel.takePhoto()
-               }
-       
-               //缺点：太多模特实例，占内存
-               //改进,只用一个模特 穿50种衣服
-               var Model = function (sex) {
-                   this.sex = sex
-               }
-       
-               Model.prototype.takePhoto = function () {
-                   console.log(`sex= ${this.sex}, underware = ${this.underware}`)
-               }
-               var maleModel = new Model('male')
-               for (var i = 1; i <= 50; i++) {
-                   maleModel.underware = underware + i
-                   maleModel.takePhoto()
-               }
-       */
+        var Model = function (sex, underware) {
+            this.sex = sex
+            this.underware = underware
+        }
+
+        Model.prototype.takePhoto = function () {
+            console.log(`sex= ${this.sex}, underware = ${this.underware}`)
+        }
+
+        for (var i = 1; i <= 50; i++) {
+            var maleModel = new Model('male', 'underware' + i)
+            maleModel.takePhoto()
+        }
+
+        //缺点：太多模特实例，占内存
+        //改进,只用一个模特 穿50种衣服
+        var Model = function (sex) {
+            this.sex = sex
+        }
+
+        Model.prototype.takePhoto = function () {
+            console.log(`sex= ${this.sex}, underware = ${this.underware}`)
+        }
+        var maleModel = new Model('male')
+        for (var i = 1; i <= 50; i++) {
+            maleModel.underware = underware + i
+            maleModel.takePhoto()
+        }
+
 
         //以上把对象的属性划分成立两个部分：内部属性/外部属性
         //其中性别为内部属性，衣服种类为外部属性
@@ -52,7 +52,7 @@
         //2.管理器记录对象相关的外部状态，是这些外部状态通过某个狗子与共享对象联系
 
         //文件上传案例 
-/*
+
         var id = 0;
         window.startUpload = function (uploadType, files) {
             for (var i = 0, file; file = files[i++];) {
@@ -89,7 +89,7 @@
             }
         }
 
-                startUpload('plugin', [
+        startUpload('plugin', [
             {
                 fileName: '1.txt',
                 fileSize: 1000
@@ -104,7 +104,7 @@
             }
         ])
 
-*/
+
 
 
     </script>
@@ -118,7 +118,7 @@
 
         Upload.prototype.delFile = function (id) {
             uploadManager.setExternalState(id, this)
-            console.log(this)
+
             if (this.fileSize < 3000) {
                 return this.dom.parentNode.removeChild(this.dom)
             }
@@ -150,20 +150,22 @@
                     dom.innerHTML = '<span>文件名称：' + fileName + ', 文件大小：' + fileSize +
                         '<span>' + '<button class="delFile">删除</button>'
                     dom.querySelector('.delFile').onclick = function () {
-                        flyWeightObj.delFile()
+                        flyWeightObj.delFile(id)
                     }
                     document.body.appendChild(dom)
 
-                    uploadDatabase[id]={
-                        fileName,
-                        fileSize,
-                        dom
+                    uploadDatabase[id] = {
+                        fileName: fileName,
+                        fileSize: fileSize,
+                        dom: dom
                     }
+
                     return flyWeightObj
                 },
-                setExternalState:function(id, flyWeightObj){
+
+                setExternalState: function (id, flyWeightObj) {
                     var uploadData = uploadDatabase[id]
-                    for(var i in uploadData){
+                    for (var i in uploadData) {
                         console.log(i)
                         // fileName, fileSize, dom绑定到flyWeightObj对象身上
                         flyWeightObj[i] = uploadData[i]
@@ -173,9 +175,9 @@
         })()
 
         var id = 0
-        window.startUpload = function(uploadType, files){
-            for(var i =0,file;file = files[i++];){
-                var uploadObj = uploadManager.add(++id, uploadType, file.fileName,file.fileSize)
+        window.startUpload = function (uploadType, files) {
+            for (var i = 0, file; file = files[i++];) {
+                var uploadObj = uploadManager.add(++id, uploadType, file.fileName, file.fileSize)
             }
         }
 
@@ -194,5 +196,151 @@
             }
         ])
 
+    </script>
+
+    <script>
+        //享元模式带来的的好处取决于如何使用以及何时使用
+        //1.程序使用了大量相似对象
+        //2.使用了大量对象，造成了大量内存开销
+        //3.对象的大多数状态可以变成外部状态
+        //4.剥离出对象的外部状态后，可以用相对较少的共享对象去掉大量对象
+
+
+        //两种极端状态：
+        //1. 没有内部对象的享元模式
+
+
+        //只提供一种默认的上传方式
+        //那么内部就不用使用对象来保存不同的上传方式对应的实例
+        var Upload = function (uploadType) { }
+
+        var UploadFactory = (function () {
+            var FlyWeightObjs = {}
+            return {
+                create: function (uploadType) {
+                    if (FlyWeightObjs) {
+                        return FlyWeightObjs
+                    }
+                    return FlyWeightObjs = new Upload()
+                }
+            }
+        })()
+
+        //2. 没有外部状态的享元模式
+        //java 代码
+        //对象池，a1在池中创建a字符串对象
+        //池中有了a字符串对象，那么a2返回存在对象的引用
+        //因此a1 === a2
+        //但是并没有剥离外部对象，那么其实并不是一个纯粹的享元模式
+        plublic class Test {
+            plublic static void main(String args[]) {
+                String a1 = new String('a').intern()
+                String a2 = new String('a').intern()
+                System.out.println(a1 === a2) //true
+            }
+        }
+
+        //享元模式应用二：对象池
+        //对象池维护一个装在【空闲】对象的池子
+        //如果需要对象，不是直接new而是从对象池获取
+        //如果没有空闲的对象，就new一个
+        //取出的对象完成职责之后，就放回池子里
+
+        //HTTP连接池，数据库连接池
+        //避免频繁创建和删除DOM节点
+
+        //例子：地图应用中标记用的tooltip点，地图缩放的时候红点数目会改变，但是不会把红点实例删除，只是放进池子里
+
+        var toolTipFactory = (function () {
+            //共享对象池
+            var toolTipPool = []
+            return {
+                create: function () {
+                    if (toolTipPool.length === 0) {
+                        var div = document.createElement('div')
+                        document.body.appendChild(div)
+                        return div
+                    } else {
+                        return toolTipPool.shift()
+                    }
+                },
+                recover: function (tooltipDom) {
+                    return toolTipPool.push(tooltipDom)
+                }
+            }
+        })()
+        //第一次搜索
+        //“实例”池
+        var ary = []
+        for (var i = 0, str; str = ['A', 'B'][i++];) {
+            var toolTip = toolTipFactory.create()
+            toolTip.innerHTML = str
+            ary.push(toolTip)
+        }
+        //一次搜索完毕
+        for (var i = 0, toolTip; toolTip = ary[i++];) {
+            toolTipFactory.recover(toolTip)
+        }
+
+        //二次搜索
+        for (var i = 0, str; str = ['A', 'B', 'C', 'D', 'E', 'F'][i++];) {
+            var toolTip = toolTipFactory.create()
+            toolTip.innerHTML = str
+        }
+
+        //不同点：没有主动把内外部状态分开，并有专门的模块管理外部状态
+        //当然 innerHTML可以看成外部状态
+
+
+    </script>
+
+
+    <script>
+        //实现一个通用对象池,构建函数要从外部传入
+        var objectPoolFactory = function (createObjFn) {
+            var objectPool = []
+            return {
+                create: function () {
+                    var obj = objectPool.length === 0
+                        ?
+                        createObjFn.apply(this, arguments)
+                        :
+                        objectPool.shift()
+                    console.log(objectPool)
+                    return obj
+                },
+                recover: function (obj) {
+                    objectPool.push(obj)
+                }
+            }
+        }
+
+        const iframeFactory = objectPoolFactory(function () {
+            var iframe = document.createElement('iframe')
+            document.body.appendChild(iframe)
+
+            iframe.onload = function () {
+                iframe.onload = null//防止iframe重复加载的bug
+                //加载完毕后放入池中，说明已经使用完毕了
+                iframeFactory.recover(iframe)
+            }
+
+            return iframe
+        })
+
+        var iframe1 = iframeFactory.create()
+        iframe1.src = 'http://baidu.com'
+
+        var iframe2 = iframeFactory.create()
+        iframe2.src = 'http://qq.com'
+
+        setTimeout(() => {
+            //取出已经加载完毕的池内元素
+            var iframe3 = iframeFactory.create()
+            iframe3.src = "http://163.com"
+
+            var iframe3 = iframeFactory.create()
+            iframe3.src = "https://www.bilibili.com/"
+        }, 3000)
     </script>
 </body>
