@@ -1,0 +1,237 @@
+<body>
+    <script>
+        //多个对象都有机会处理请求，从而避免请求发送者和接受者的耦合
+        //讲这些对象连成一条链，沿着这条链传递请求，直至有一个对象处理
+
+        //案例：公交车投币；考试传纸条作弊
+
+        //案例： 可以工作，但是庞大且难以维护
+        var order500 = function (orderType, pay, stock) {
+            if (orderType === 1) {
+                if (pay === true) {
+                    console.log('500元定金已预购，得到100元优惠券')
+                } else {
+                    if (stock > 0) {
+                        console.log('普通用户，无优惠券')
+                    } else {
+                        console.log('手机库存不足')
+                    }
+                }
+            } else if (orderType === 2) {
+                if (pay === true) {
+                    console.log('200元定金已预购，得到50元优惠券')
+                } else {
+                    if (stock > 0) {
+                        console.log('普通用户，无优惠券')
+                    } else {
+                        console.log('手机库存不足')
+                    }
+                }
+            } else if (orderType === 3) {
+                if (stock > 0) {
+                    console.log('普通用户，无优惠券')
+                } else {
+                    console.log('手机库存不足')
+                }
+            }
+        }
+
+        //修改V1：拆解庞大的order函数，但是职责链的传递和业务代码耦合严重，不利于维护
+        //如果某一天增加一个判断条件 还是破坏性地修改业务代码
+        var order500 = function (orderType, pay, stock) {
+            if (orderType === 1 && pay === true) {
+                console.log('500元定金已预购，得到100元优惠券')
+            } else {
+                order200(orderType, pay, stock)
+            }
+        }
+
+        var order200 = function (orderType, pay, stock) {
+            if (orderType === 2 && pay === true) {
+                console.log('200元定金已预购，得到50元优惠券')
+            } else {
+                orderNormal(orderType, pay, stock)
+            }
+        }
+
+        var orderNormal = function (orderType, pay, stock) {
+            if (stock > 0) {
+                console.log('普通购买，无优惠')
+            } else {
+                console.log('手机库存不足')
+            }
+        }
+
+
+        //V2：这次不直接调用下一个函数，而是返回一个约定的字符串
+        var order500 = function (orderType, pay, stock) {
+            if (orderType === 1 && pay === true) {
+                console.log('500元定金已预购，得到100元优惠券')
+            } else {
+                return 'nextSuccessor'
+            }
+        }
+
+        var order200 = function (orderType, pay, stock) {
+            if (orderType === 2 && pay === true) {
+                console.log('200元定金已预购，得到50元优惠券')
+            } else {
+                return 'nextSuccessor'
+            }
+        }
+
+        var orderNormal = function (orderType, pay, stock) {
+            if (stock > 0) {
+                console.log('普通购买，无优惠')
+            } else {
+                console.log('手机库存不足')
+            }
+        }
+
+        //其实就是链表的data和node
+        var Chain = function (fn) {
+            this.fn = fn //当前节点的函数
+            this.successor = null //下一节点
+        }
+
+        Chain.prototype.setNextSuccessor = function (successor) {
+            //successor为下一节点实例
+            return this.successor = successor
+        }
+
+        Chain.prototype.passRequest = function () {
+            var ret = this.fn.apply(this, arguments)
+            if (ret === 'nextSuccessor') {
+                //注意绑定的this
+                return this.successor && this.successor.passRequest.apply(this.successor, arguments)
+            }
+            return ret
+        }
+
+        var chainOrder500 = new Chain(order500)
+        var chainOrder200 = new Chain(order200)
+        var chainOrderNormal = new Chain(orderNormal)
+
+        chainOrder500.setNextSuccessor(chainOrder200)
+        chainOrder200.setNextSuccessor(chainOrderNormal)
+
+        chainOrder500.passRequest(1, true, 500)
+        chainOrder500.passRequest(2, true, 500)
+
+        //加入某一天要加入300元的条件,符合开放-封闭原则，非破坏性地修改代码
+        var order300 = function () {
+            if (orderType === 2 && pay === true) {
+
+            } else {
+                return 'nextSuccessor'
+            }
+        }
+
+        chainOrder300 = new Chain(order300)
+
+        chainOrder500.setNextSuccessor(chainOrder300)
+        chainOrder300.setNextSuccessor(chainOrder200)
+
+        //V3 升级版：上述函数是return 一个常量
+        //如果是一个异步函数的请求呢？根据异步函数的结果再决定
+        //手动添加命令(结合命令模式,决定什么时候应该传递) 例如next
+        Chain.prototype.next = function () {
+            return this.successor && this.successor.passRequest.apply(this.successor, arguments)
+        }
+
+        var fn1 = new Chain(function () {
+            console.log(1)
+            return 'nextSuccessor'
+        })
+
+        var fn2 = new Chain(function () {
+            console.log(2)
+            var self = this
+            setTimeout(() => {
+                self.next()
+            }, 1000);
+        })
+
+        var fn3 = new Chain(function () {
+            console.log(3)
+        })
+
+        fn1.setNextSuccessor(fn2).setNextSuccessor(fn3)
+
+        fn1.passRequest()
+
+
+    </script>
+
+    职责模式的优缺点：
+    1. 可以将一对多的问题转化为一对一的问题，在现实开发中的应用：根部订单种类弹出不同的浮层提示，渲染不同的UI节点，结合不同参数发送不同cgi
+    2. 代码非破坏性修改，易于维护
+    3. 可以手动指定节点，例如公交车的例子中，如果第一个人不是售票员，可以越过第一个人传递，减少传递次数
+
+    缺点：
+    1.一定要在链尾处理没有处理的请求/异常
+    2.过长的职责链会带来性能损耗
+
+
+    <script>
+        //AOP实现职责链
+        //Function原型链，after是一个高阶函数
+        let id = 0
+        Function.prototype.after = function (fn) {
+            //这里的self指的是函数对象如order500, order200, orderNormal
+            //返回一个匿名函数，该匿名函数的运行时优先调用上一个节点的函数
+            //也就是说返回的匿名函数会先调用产生匿名函数的那个函数，形成调用链
+            //而调用链的源头就是第一个函数对象
+            //有点递归的意思
+            var self = this
+            return function () {
+                //理解self的值
+                var ret = self.apply(this, arguments)
+                if (ret === 'nextSuccessor') {
+                    return fn.apply(this, arguments)
+                }
+                return ret
+            }
+        }
+        var order = order500.after(order200).after(orderNormal)
+        //console.log(order)
+        /*function () {
+                var ret = self.apply(this, arguments)
+                if (ret === 'nextSuccessor') {
+                    return fn.apply(this, arguments)
+                }
+                return ret
+            }*/
+            debugger
+        order(1,false,500)
+    </script>
+
+    <script>
+        //案例：利用职责链模式获取文件上传对象
+        var getActiveUploadObj = function(){
+            try{
+                return new ActiveXObject("TXFTNActiveX.FTNUpload") //IE上传空间
+            }catch(e){
+                return 'nextSuccessor'
+            }
+        }
+
+        var getFlashUploadObj = function(){
+            if(supportFlash()){
+                var str = '<object type="application/x-shockwave-flash"></object>'
+                return $(str).appendTo($('body'))
+            }
+            return 'nextSuccessor'
+        }
+
+        var getFormUploadObj = function(){
+            return $('<form><input name="file" type="file"/></form>').appendTo($('body'))
+        }
+
+
+        var getUploadObj = getActiveUploadObj.after(getFlashUploadObj).after(getFormUploadObj)
+        console.log(getUploadObj())
+
+    </script>
+
+</body>
