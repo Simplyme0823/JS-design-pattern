@@ -1,0 +1,241 @@
+<body>
+    OOP鼓励将行为分布到各个对象之中，把对象分为更小的粒度，有助于增强对象的复用性，
+    但是细粒度对象直接的关系激增，有可能反过来降低其复用性
+    添加中介者，让所有的相关对象通过中介者来通信，而不是相互引用
+
+    现实生活中的举例：1.机场指挥塔；2.博彩公司
+    <script>
+        function Player(name) {
+            this.name = name
+            this.enemy = null
+        }
+
+        Player.prototype.win = function () {
+            console.log(this.name + ' won!')
+        }
+
+        Player.prototype.lose = function () {
+            console.log(this.name + ' lost!')
+        }
+
+        Player.prototype.die = function () {
+            this.lose()
+            this.enemy.win()
+        }
+
+        var player1 = new Player('小智')
+        var player2 = new Player('小刚')
+
+        player1.enemy = player2
+        player2.enemy = player1
+
+    </script>
+    <script>
+        //两个人的情况下貌似很简单 但是如果由个玩家呢？
+        //最直接的想法：给Player类添加 partners, enemies属性保存，
+        //那么每次胜利/死亡，都要遍历一遍内部的实例们，并调用对应方法
+        //而且由N个对象，这种方式既浪费时间又浪费空间
+
+        //特点：每个实例都互相关联在一起
+
+        /**
+        *  使用终结者模式改造
+        */
+
+        function Player(name, teamColor) {
+            this.name = name
+            this.teamColor = teamColor
+            this.state = 'alive'
+        }
+
+        Player.prototype.win = function () {
+            console.log(this.name + 'won')
+        }
+
+        Player.prototype.lose = function () {
+            console.log(this.name + 'lost')
+        }
+
+        Player.prototype.die = function () {
+            this.state = 'dead'
+            //给中介者发消息
+            playerDirector.ReceiveMessage('removePlayer', this)
+        }
+        Player.prototype.changeTeam = function (color) {
+            playerDirector.ReceiveMessage('changeTeam', this, color)
+        }
+
+        var playerFactory = function (name, teamColor) {
+            var newPlayer = new Player(name, teamColor)
+            playerDirector.ReceiveMessage('addPlayer', newPlayer)
+            return newPlayer
+        }
+
+
+        //需要playerDirector对象充当终结者
+        //其需要实现以下功能：二选一
+        //1. 可以使用发布订阅模式：playerDirector实现为订阅者，各player为发布者，一旦player状态发生变化，便推送消息给playerDirector,然后终结者处理消息后将反馈发送给其他player
+        //2. playerDirector中开放一些接受消息的接口，各个player可以直接调用该接口给playerDirector发消息，player只需传递一个参数给playerDirector，这个参数的目的是使playerDirector可以【识别】发送者，同样的 处理后也可以反馈给其他player
+
+        //设定 playerDirector的接口 ReceiveMessage, 接受this作为参数，
+
+        var playerDirector = (function () {
+            var players = {}
+            operations = {}
+
+            operations.addPlayer = function (player) {
+                var teamColor = player.teamColor
+                //有则读取，无则建立
+                players[teamColor] = players[teamColor] || []
+                players[teamColor].push(player)
+            }
+
+            operations.removePlayer = function (player) {
+                var teamColor = players.teamColor
+                teamPlayers = players[teamColor] || []
+                for (var i = teamPlayers.length - 1; i >= 0; i--) {
+                    if(teamPlayers[i]===player){
+                        teamPlayers.splice(i,1)
+                    }
+                }
+            }
+
+            operations.changeTeam = function(player, newTeam){
+                operations.removePlayer(player)
+                player.teamColor = newTeam
+                operations.addPlayer(player)
+            }
+
+            operations.playerDead = function(player){
+                var teamColor = player.teamColor
+                var teamPlayers = players[teamColor]
+
+                var all_dead = true
+                for(var i =0,player;player=teamPlayers[i++];){
+                    if(player.state!=='dead'){
+                        all_dead =false
+                        break;
+                    }
+                }
+
+                if(all_dead===true){
+                    for(var i =0,player;player=teamPlayers[i++];){
+                        player.lose()
+                    }
+
+                    for(var color in players){ //?
+                        if(color!==teamColor){
+                            var teamPlayers = players[color]
+                            for(var i = 0,player;player=teamPlayers[i++];){
+                                player.win()
+                            }
+                        }
+                    }
+                }
+            }
+
+            var ReceiveMessage = function(){
+                var Message = Array.prototype.shift.call(arguments)
+                operations[Message].apply(this,arguments)
+            }
+
+            return {
+                ReceiveMessage:ReceiveMessage
+            }
+        })()
+
+    </script>
+
+选择颜色：<select id="colorSelect">
+    <option value="">请选择</option>
+    <option value="red">红色</option>
+    <option value="blue">蓝色</option>
+
+    输入购买数量：<input type="text" id="numberInput" />
+
+    您选择了颜色：<div id="colorInput"></div><br/>
+    您输入了数量：<div id="numberInput"></div><br/>
+    <button id="nextBtn" disabled='true'>请选择手机的数量和种类</button>
+</select>
+    <script>
+//对于最直接的方法就是
+//1.先获取dom
+//2.获取手机库存
+//3.设置监听函数
+// 如果把所有的代码都写在onchange中，那么耦合严重
+
+//使用中介者
+var meidatorr = (function(){
+    var colorSelect = document.getElementById('colorSelect')
+    memorySelect = document.getElementById('memorySelect')
+    numberInput = document.getElementById('numberInput')
+    colorInfo = document.getElementById('colorInfo')
+    memoryInfo = document.getElementById('memoryInfo')
+    numberInfo = document.getElementById('numberInfo')
+    nextBtn = document.getElementById('nextBtn')
+
+    return {
+        changed:function(obj){
+            var color = colorSelect.value
+            memory = memorySelect.value
+            number  = numberInput.value
+            stock = goods[color + '|' + memory]
+
+            if(obj === colorSelect){
+                colorInfo.innerHTML = color
+            }else if(obj === memorySelect){
+                memoryInfo.innerHTML = memory
+            }else if(obj === numberInput){
+                numberInfo.innerHTML = number
+            }
+
+            if(!color){
+                nextBtn.disabled = true
+                nextBtn.innerHTML = '请选择手机颜色'
+                return
+            }
+            if(!memory){
+                nextBtn.disabled = true
+                nextBtn.innerHTML = '请选择内存大小'
+                return
+            }
+            if(Number.isInteger(number-0)&&number>0){
+                nextBtn.disabled = true
+                nextBtn.innerHTML = '请选择正确的购买数量'
+                return
+            }
+
+            nextBtn.disabled = false
+            nextBtn.innerHTML= '放入购物车'
+        }
+    }
+})()
+
+//事件函数
+colorSelect.onChange=function(){
+    meidatorr.changed(this)
+}
+memorySelect.onChange=function(){
+    meidatorr.changed(this)
+}
+numberInput.onChange=function(){
+    meidatorr.changed(this)
+}
+
+//如果添加一个限制条件
+//1. 修改中介者，添加dom元素对象，添加判断函数的判断条件
+//2. 添加dom元素，添加绑定的回调函数
+
+
+    </script>
+总结：中介者模式是迎合迪米特法则，也叫最少知识原则，指的是一个对象应该尽可能少地
+了解另外的对象，如果对象之间的耦合度太高，一个对象改变后，难免会影响到其他对象。
+在中介者模式中，对象之间几乎彼此之间不知的对方的存在，只能通过中介者来互相影响
+
+缺点：1.系统要新增一个对象，对象之间交往的复杂性，编程了中介者对象的复杂性，使得
+中介者对象往往是复杂的
+
+注意：对象之间不一定非要解耦，项目中，模块或者对象有耦合是正常的，
+目的的快速交付生产使用，如果确实有必要，可以用中介者模式来重构代码
+
+</body>
