@@ -1,0 +1,26 @@
+<body>
+    <script>
+        var plane = {
+            fire() {
+                console.log('发射普通子弹')
+            }
+        }
+        var missileDecorator = function () {
+            console.log('发射导弹')
+        }
+
+        //这里出现死循环，懂了
+        plane.fire = function () {
+            debugger
+            console.log(fire1.toString())
+            fire1()
+            missileDecorator()
+        }
+
+        var fire1 = plane.fire
+
+        plane.fire()
+
+
+    </script>
+</body>
