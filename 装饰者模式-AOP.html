@@ -1,0 +1,83 @@
+<body>
+    <button id="button">button</button>
+    <script>
+        Function.prototype.before = function (beforeFn) {
+            var _self = this
+            return function () {
+                beforeFn.apply(this, arguments)
+                return _self.apply(this, arguments)
+            }
+        }
+
+        document.getElementById = document.getElementById
+            .before(function () { alert(1) })
+
+        //var button = document.getElementById('button')
+
+        //console.log(button)
+    </script>
+
+    <script>
+        Function.prototype.after = function (afterFn) {
+            const _self = this
+            return function () {
+                const ret = _self.apply(this, arguments)
+                afterFn.apply(_self, arguments)
+                return ret
+            }
+        }
+       // window.onload = function () { alert(1) }
+    //注意window.onload的运行顺序
+        /* window.onload = (window.onload || function () { })
+             .after(function () { alert(2) })
+             .after(function () { alert(3) })
+             .after(function () { alert(4) })*/
+
+    </script>
+
+    <script>
+        //以上方法会污染原型链，因此需要改写
+        var before = function (fn, beforeFn) {
+            return function () {
+                beforeFn.apply(this, arguments)
+                fn.apply(this, arguments)
+            }
+        }
+
+        var a = before(function () { alert(7) }, function () { alert(6) })
+        a = before(a, function () { alert(5) })
+
+        //a()
+    </script>
+
+    <button tag='login' id="login">
+        点击打开登录浮层
+    </button>
+
+    <script>
+        //数据上报统计
+        /*var showLogin = function () {
+            console.log('打开登录浮层')
+            log(this.getAttribute('tag'))
+        }
+
+        var log = function (tag) {
+            console.log('上报标签为：' + tag)
+        }
+        document.getElementById('login').onclick = showLogin*/
+
+    </script>
+
+    <script>
+
+        var showLogin = function () {
+            console.log('打开登录浮层')
+        }
+        var log = function () {
+            console.log('上报标签为：' + this.getAttribute('tag'))
+        }
+        showLogin = showLogin.after(log)
+
+        document.getElementById('button').onclick = showLogin
+    </script>
+</body>
