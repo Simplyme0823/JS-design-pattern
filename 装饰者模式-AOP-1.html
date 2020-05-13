@@ -1,0 +1,99 @@
+<body>
+    <script>
+        Function.prototype.before = function (beforeFn) {
+            const _self = this
+            return function () {
+                beforeFn.apply(this, arguments) //1
+                return _self.apply(this, arguments) //2
+            }
+        }
+
+        //从1.2两处可以看出共用一个参数：如果在beforeFn内改变了arguments，那么_self的运行也会受影响
+        var func = function (param) {
+            console.log(param) //{a:'a', b:'b'}
+        }
+
+        func = func.before(function (param) { param.b = 'b' })
+        func({ a: 'a' })
+
+        var ajax = function (type, url, param) {
+            console.log(param)
+        }
+
+
+        ajax('get', 'http://www.baidu.com', { name: 'seven' }) //模拟请求
+
+        //为了防止csrf攻击，请求头添加token
+        var getToken = function () {
+            return 'Token'
+        }
+
+        //改写ajax，让参数都带上token
+        /*var ajax = function(type ,url ,param){
+            param = param ||{}
+            param.token = getToken()
+        }*/
+        //需求：更改token获取方式？？？按照上述方法会破坏性地修改代码
+        //解决方法：
+
+        ajax = ajax.before(function (type, url, param) {
+            param.token = getToken()//由于共享arguments 所以当这个匿名函数更改了arguments[2]的param对象后
+            //ajax函数的param也变成了带有token的达到了解耦的目的
+        })
+
+        ajax('get', 'http://www.baidu.com', { name: 'seven' })
+
+
+    </script>
+    用户名：<input type="text" id="username" />
+    密码：<input type="password" id="password" />
+    <input id="submitBtn" type="button" value="提交">
+    <script>
+        var username = document.getElementById("username")
+        var password = document.getElementById('password')
+        var submitBtn = document.getElementById('submitBtn')
+
+        //一般的代码都是讲验证和发送请求杂糅在一起
+        //稍微好点的会分成两个函数，第一个函数验证，第二个函数发送请求，但是并没完全分离
+
+        /*var formSubmit = function () {
+            if (validata() == false) return //part 1
+            ajax()// part2
+        }*/
+
+Function.prototype.before = function(beforeFn){
+    const _self = this
+    return function(){
+        if(beforeFn.apply(this,arguments)===false)return 
+        return _self.apply(this,arguments)
+    }
+}
+
+//formSubmit = formSubmit.before(validata)
+
+//再利用策略模式稍加改造，就可以把校验规则都写成插件形式，用在不同的项目之中
+
+//注意点：装饰链过长会影响性能
+
+//每次执行after/before的时候
+var func = function(){console.log(1)}
+func.a ='a'
+func = func.after(function(){console.log(2)})
+alert(func.a)//undefined
+    </script>
+
+
+代理模式与装饰者模式的区别
+1. 代理模式的目的是当直接访问本体不方便或者不符合要去的时候，给本体提供一个替代者，本体定义了关键功能
+代理提供/拒绝对它的访问，或者在访问本体之前做一些额外的事情
+代理模式强调一种Proxy与它的实体之间的 可以静态表达的关系，这种关系一开始就被确定
+代理模式通常只有一层 代理-本体的引用
+
+2. 装饰者模式的对对象【动态】地加入行为，装饰者模式用于一开始不能确定对象的全部功能，装饰者通常形成一条长链
+
+以书中的img代理模式预加载小图片，然后等真实图片加载完再显示真实图片
+
+在例子中，代理和本体都是在做同样的事情，（对于透明代理，本体和代理的接口一样）
+而在aop的例子中，添加的新职责都是不同的事情如请求token+ajax， 验证表单+ajax
+</body>
+

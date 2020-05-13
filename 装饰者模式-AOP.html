@@ -19,10 +19,13 @@
 
     <script>
         Function.prototype.after = function (afterFn) {
+            //这里的this指的是函数对象，是调用after方法的函数 在afterFn之前运行的函数
             const _self = this
             return function () {
+                //这里的this值得是返回匿名函数运行的上下文环境
+                //两个先后运行的函数共享一个上下文环境
                 const ret = _self.apply(this, arguments)
-                afterFn.apply(_self, arguments)
+                afterFn.apply(this, arguments)
                 return ret
             }
         }
@@ -71,9 +74,11 @@
     <script>
 
         var showLogin = function () {
+            console.log(this)//<button></button>
             console.log('打开登录浮层')
         }
         var log = function () {
+            console.log(this)//<button></button>
             console.log('上报标签为：' + this.getAttribute('tag'))
         }
         showLogin = showLogin.after(log)
