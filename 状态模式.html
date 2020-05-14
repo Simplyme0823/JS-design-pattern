@@ -1,0 +1,125 @@
+<body>
+    状态模式的关键是区分事物内部的状态
+    事物内部状态的改变往往会带来事物的行为改变
+    <script>
+        //模拟电灯开关
+        var Light = function () {
+            this.state = 'off'
+            this.button = null
+        }
+
+        Light.prototype.init = function () {
+            var button = document.createElement('button')
+            var self = this
+            button.innerHTML = '开关'
+            this.button = document.body.appendChild(button)
+            this.button.onclick = function () {
+                self.buttonWasPressed()
+            }
+        }
+
+        Light.prototype.buttonWasPressed = function () {
+            if (this.state === 'off') {
+                console.log('开灯')
+                this.state = 'on'
+            } else if (this.state === 'on') {
+                console.log('关灯')
+                this.state = 'off'
+            }
+        }
+
+        var light = new Light()
+        light.init()
+
+        //新问题：点灯可不只是一种，可能有三种状态的点灯
+        //每次都要添加一个状态会破坏性地修改代码，还容易出错
+
+        //对于传统的封装，一般的偶会封装一个对象的所有行为，而不是某一个状态
+        //我们可以把状态的切换规则实现分布在状态类中，这样就有效地消除了原本存在的大量条件分支语句
+
+        //开始
+        var OffLightState = function(light){
+            this.light = light
+        }
+        OffLightState.prototype.buttonWasPressed = function(){
+            console.log('弱光')
+            this.light.setState(this.light.weakLightState)
+        }
+
+        var WeekLightState = function(light){
+            this.light = light
+        }
+
+        WeekLightState.prototype.buttonWasPressed = function(){
+            console.log('强光')
+            this.light.setState(this.light.strongLightState)
+        }
+
+        var StrongLightState = function(light){
+            this.light = light
+        }
+
+        StrongLightState.prototype.buttonWasPressed = function(){
+            console.log('关灯')
+            this.light.setState(this.light.offLightState)
+        }
+
+        var Light = function(){
+            this.offLightState = new OffLightState(this)
+            this.weakLightState = new WeekLightState(this)
+            this.strongLightState = new StrongLightState(this)
+            this.button = null
+        }
+
+        Light.prototype.init = function(){
+            var button = document.createElement('button')
+            var self = this
+            this.button = document.body.appendChild(button)
+            this.button.innerHTML = '开关'
+            this.currState = this.offLightState
+            this.button.onclick = function(){
+                self.currState.buttonWasPressed()
+            }
+        }
+
+        Light.prototype.setState = function(newState){
+            this.currState = newState
+        }
+        var light = new Light()
+        light.init()
+
+        //新增超强光
+        var SuperStrongLightState = function(light){
+            this.light =light
+        }
+        SuperStrongLightState.prototype.buttonWasPressed = function(){
+            console.log('关灯')
+            this.light.setState(this.light.offLightState)
+        }
+
+        //修改构造函数
+        var Light = function(){
+            this.offLightState = new OffLightState(this)
+            this.weakLightState = new WeekLightState(this)
+            this.strongLightState = new StrongLightState(this)
+            this.superStrongLightState = new SuperStrongLightState(this)
+            this.button = null
+        }
+        //修改强光类
+        StrongLightState.prototype.buttonWasPressed = function(){
+            console.log('超强光')
+            this.light.setState(this.light.superStrongLightState)
+        }
+    </script>
+
+    GoF中对状态模式的定义：允许一个对象在其内部状态改变时改变它的行为，对象开起来似乎新修改了它的类
+    第一部分是将状态分装成独立的类，并将请求委托给当前的状态对象，当对象的内部状态改变时，会带来不同的行为变化
+
+    第二部分是从客户的角度来看，我们使用的对象在不同状态下具有截然不同的行为，这个对象
+    看起来是从不同的类中实例化而来的，实际上是用了委托的效果
+
+    <script>
+        //在上述案例中，四种状态类的建立都用了类似的代码，因此可以用抽象类/接口来定义来规范
+        //以免写代码的是出错
+    </script>
+</body>
