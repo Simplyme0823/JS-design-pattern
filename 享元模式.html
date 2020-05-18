@@ -24,6 +24,7 @@
         Model.prototype.takePhoto = function () {
             console.log(`sex= ${this.sex}, underware = ${this.underware}`)
         }
+        //underware用完就扔
         var maleModel = new Model('male')
         for (var i = 1; i <= 50; i++) {
             maleModel.underware = underware + i
@@ -56,6 +57,8 @@
         var id = 0;
         window.startUpload = function (uploadType, files) {
             for (var i = 0, file; file = files[i++];) {
+
+                //这里new了多个实例
                 var uploadObj = new Upload(uploadType, file.fileName, file.fileSize)
                 uploadObj.init(id++)
             }
@@ -111,7 +114,8 @@
     <script>
         //代码重构，避免使用多个实例
         //fileName fileSize是外部属性
-        //id uloadType是内部属性
+
+        // uloadType是内部属性
         var Upload = function (uploadType) {
             this.uploadType = uploadType
         }
