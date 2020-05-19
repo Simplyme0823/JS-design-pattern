@@ -156,7 +156,6 @@
         //bindEvent函数改变
         Upload.prototype.bindEvent = function () {
             var self = this
-
             //套路，每种状态都有相同的接口
             this.button1.onclick = function () {
                 self.currState.clickHandler1()
@@ -209,6 +208,7 @@
                 var F = function (uploadObj) {
                     this.uploadObj = uploadObj
                 }
+
                 F.prototype = new State()//这里new了State类不会报错
                 for (var i in param) {
                     F.prototype[i] = param[i]
@@ -216,6 +216,7 @@
                 return F
             }
         })()
+
 
         var SignState = StateFactory({
             clickHandler1: function () {
@@ -262,18 +263,51 @@
         var uploadObj = new Upload('JavaScript 设计模式与开发实践')
         uploadObj.init()
 
-        window.external.upload = function(state){
+        window.external.upload = function (state) {
             uploadObj[state]()
         }
 
+
+        //需要手动控制的state
+
+        //启动扫描
         window.external.upload('sign')
 
         setTimeout(() => {
+            //启动上传
             window.external.upload('uploading')
         }, 1000);
 
         setTimeout(() => {
+            //上传完毕
             window.external.upload('done')
         }, 5000);
+
+
+
+
     </script>
+    状态模式优点：
+    1. 定义了状态和行为之间的关系：并将它们封存在一个类里，通过增加新状态，很容易增加新的状态和转化
+    2. 避免context无限膨胀，状态切换的逻辑被分布在状态类中，同时去掉了context中多余的条件分支
+    3.对象代替了字符串来记录当前状态，让状态切换一目了然
+    4. context中的请求动作和状态类中封装的行为可以非常容易地独立变化而互不影响
+
+    缺点：
+    1.编写大量的状态类
+    2.逻辑分散
+
+    优化：
+    1. 这里为每一个上传对象都安排了一组新的状态对象，其实这里可以做一个优化，
+       代码中每一个状态对象内部都保存了对应的上传对象，可以把这个上传对象看做是一个外部对象
+       然后分离出来，利用享元模式，减少实例个数
+
+    2. state对象建立可以使用懒加载，需要的时候才被创立并且随即销毁，不用IFEE；2）IFEE适合状态改变很频繁
+
+    其与策略模式的区别：
+    相同：都有一个上下文，一些策略或状态，上下文把请求委托给这些类执行
+    区别：策略模式中，各个策略类之间是平等平行，之间没有任何联系，客户必须熟知策略类以便主动切换  表单验证中有一项不通过就直接抛出错误，
+    
+    状态模式中，状态和状态对应的行为早就封装好了，状态之间的切换也已经完成，改变这件事情发生在状态模式内部，
+    对客户来说并不需要了解这些细节。
 </body>
