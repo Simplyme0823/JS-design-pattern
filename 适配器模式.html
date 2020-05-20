@@ -1,0 +1,95 @@
+<body>
+    适配器的别名是包装器，这是一个相对简单的模式。
+    应用场景：试图调用模块/对象的某个接口，却发现接口的格式不符合目前的要求
+    两种方法：1.修改原来是接口实现；2.创建一个适配器，将原接口转换为客户希望的另一个接口，客户只需要和适配器打交道
+    <script>
+        //在JSON流行之前，很多cgi返回的是XML格式，因此需要XML-JSON适配器
+        var googleMap = {
+            show: function () {
+                console.log('开始渲染谷歌地图')
+            }
+        }
+        var baiduMap = {
+            show: function () {
+                console.log('开始渲染百度地图')
+            }
+        }
+        var renderMap = function (map) {
+            if (map.show instanceof Function) {
+                map.show()
+            }
+        }
+
+        renderMap(googleMap)//开始渲染谷歌地图
+        renderMap(baiduMap)//开始渲染百度地图
+    </script>
+    <script>
+        //如果百度和谷歌提供的渲染接口名称不一致呢？
+
+        var baiduMap = {
+            display: function () {
+                console.log('开始渲染百度地图')
+            }
+        }
+        var baiduMapAdapter = {
+            show: function () {
+                return baiduMap.display()
+            }
+        }
+
+        renderMap(baiduMapAdapter)
+    </script>
+    <script>
+        //现在网页的数据
+        var getGuangdongCity = function () {
+            var guangdongCity = [
+                {
+                    name: 'shenzhen',
+                    id: 11
+                },
+                {
+                    name: 'guangzhou',
+                    id: 12
+                }
+            ]
+            return guangdongCity
+        }
+
+        var render = function (fn) {
+            console.log('开始渲染广东省地图')
+            document.write(JSON.stringify(fn()))
+        }
+
+        render(getGuangdongCity)
+
+
+        //新数据
+        var guangdongCity = {
+            shenzhen: 11,
+            guagnzhou: 12,
+            zhuhai: 13
+        }
+
+        //就是数据拼合
+        var addressAdapter = function (oldAdressfn) {
+            var address = {}
+            var oldAdress = oldAdressfn()
+            for (var i = 0; c; c = oldAdress[i++]) {
+                address[c.name] = c.id
+            }
+            //这里是为了不改变原来的render函数，做了一样的接口
+            return function () {
+                return address
+            }
+        }
+
+render(addressAdapter(getGuangdongCity))
+    </script>
+
+    适配器模式的特点：
+    1.适配器模式主要是用来解决两个已有接口之间的不匹配问题，不考虑接口怎样实现，也不考虑将来如何演化，最重要的是它不改变原来的接口
+
+    2. 装饰者模式与适配器模式：装饰者模式是为了给原来对象添加新的功能，并常常形成链式调用，而适配器模式一般只包装一次，代理模式也是为了控制对对象的访问，一般也是包装一次
+
+    3. 外观模式的作用和适配器比较相似，有人把外观模式看成一组对象的适配器，但是外观模式最显著的特点是定义了一个新的接口
+</body>
